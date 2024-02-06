@@ -1,0 +1,657 @@
+---
+title: "A/B Testing: Continous Response"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1. Types of experiments in business.
+
+2. Basic vocabulary of A/B testing.
+
+3. Understand why sampling distributions are a critical concept.
+
+4. Understand the definition of standard error.
+
+5. How to analyze A/B test when the response is continuous.
+
+6. Understand how to use and interpret confidence intervals.
+
+7. Understand how to use and interpret p-values.
+
+8. Know the 4 basic steps to completing an analysis of an A/B test.
+
+9. Understand what to do if basic assumptions are not met.
+
+## Experimenting In Business
+
+### Online Controlled Experiments
+
+It’s estimated that in 2021 globally, 4.95 billion people (62.5% of the world’s population) used the internet, each engaging with it on average 7 hours per day, and in aggregate spending over $5 trillion USD on consumer goods, travel and tourism, digital media, online food delivery, and health-related products and services.
+
+In 2022, e-commerce is predicted to account for 21% of all commerce, and by 2025 that number is expected to grow to nearly 25%.
+
+Given this scale of internet use, it is unsurprising that the optimization of online products and services is of great interest to online businesses and online components of traditional brick-and-mortar businesses.
+
+[https://www.tandfonline.com/doi/full/10.1080/00031305.2023.2257237](Larsen, N., Stallrich, J., Sengupta, S., Deng, A., Kohavi, R., & Stevens, N. T. (2023). Statistical challenges in online controlled experiments: A review of a/b testing methodology. The American Statistician, (just-accepted), 1-32.)
+
+Online Controlled Experiments are digital versions of randomized controlled trials.  
+
+### Other Types of Controlled Business Experiments
+
+Although online testing is prolific, there are many other types of simple tests that take place in business.
+
+Examples:
+
+* store displays
+* check out procedures
+* business processes
+
+We will look at many different examples throughout the semester.
+
+The crucial key in all types of experiments, online or otherwise, is randomization. Why?
+
+* **It eliminates selection bias**
+
+
+## A/B Testing
+
+Computer Scientists=A/B testing
+
+Statistician= **completely randomized design in 2 factors each at two levels. **
+
+**A is typically the "new" _variant_ or _treatment_** and _B is typically the "control"_ or baseline.  (You might hear the terms _buckets_, _arms_, or _splits_ for _variant_ in the online testing world).
+
+The responses measured are often times some average (spend per customer, time viewing) or some proportion (proportion of clicks, proportion of sales, proportion of email addresses obtained). Responses, or metrics measured, depend on the goal of the experiment. 
+
+In most business testing the __randomization unit__ is going to be people. People will be randomized to each variant.  But it does not have to be.  It could be visits or IP addressees....
+
+* The randomization unit is the experimental unit
+
+### Example 1: Response is Continuous 
+
+Suppose you conducted an A/B test with treatments A and B on a check-out website.  You measured the user spend as your response.  Use the data "ab_revenue.csv" to see if the variants are different.  
+
+```{R}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/ab_revenue.csv?token=GHSAT0AAAAAACN4F7RC7I7QH4HIE5XURMCSZOCQKSQ", stringsAsFactors = TRUE)
+head(df)
+```
+
+Step 1: Always look at a numeric and graphical summary of the data.
+
+```{R}
+library(tidyverse)
+df %>% group_by(Treatment) %>% summarise(mean=mean(Spend), sd=sd(Spend), n=n())
+
+```
+
+
+```{r}
+boxplot(Spend~Treatment, data=df)
+
+```
+
+
+What is up with that boxplot?
+
+*
+
+What question to we want to answer here?
+
+*
+
+
+What are the different average treatment effects that we can test?
+
+*
+
+Regardless how to we test to see if two means are actually different?  
+
+*
+
+
+Also, question, if we were to get a different sample of people, would the means and the standard deviations be the same as this sample?
+
+*
+
+What is the implication for the answer to the question above?
+
+*
+
+### Sampling Distributions--An Aside
+
+The sampling distribution describes how _different samples_ from the sample population behave.  What we want to know is did our treatment make a difference or did we just happen to obtain some freakish sample?
+
+__Every sample statistic has a sampling distribution.__
+
+__The standard deviation of the sampling distribution is the standard error of the statistic.__
+
+First, what is our statistic of interest in this example?
+
+$$\bar{y}_{\text{A}}-\bar{y}_{\text{B}}$$
+And what is the parameter that we will be making inference on?
+
+$$\mu_{\text{A}}-\mu_{\text{B}}$$
+
+For example, let's say that the truth is that $\mu_A$=20 and $\mu_B$=15 and each distribution has a true standard deviation of $\sigma= 5$.  Let's say we take $n_A=n_B=100$ samples from each population.  Let's simulate the sampling distribution of our parameter of interest. For each of 10,000 times we will sample 100 outcomes from each true distribution.
+
+```{R}
+set.seed(13)
+
+dif<-c()
+for (i in 1:10000){
+  dif[i]<-mean(rnorm(n=100, mean=20, sd=5))-mean(rnorm(n=100, mean=15, sd=5))
+}
+
+hist(dif, breaks=40)
+
+
+```
+
+
+What does the x-axis in the histogram represent?
+
+*
+
+What is the standard deviation of the sample differences in this histogram?
+
+
+```{R}
+
+sd(dif)
+```
+
+
+What should it be?
+
+$$ \sigma_{y_1-y_2}=\sqrt{Var(\bar{y_1})+Var(\bar{y_2}}) = \sqrt{\frac{\sigma_1^2}{n_1}+\frac{\sigma_2^2}{n_2}} $$
+
+```{R}
+
+sqrt((25/100)+(25/100))
+
+```
+
+What is the mean of the sample differences in this histogram?
+
+```{R}
+mean(dif)
+
+```
+
+What should it be?
+
+```{R}
+20-15
+
+```
+
+What we really want to know is there enough evidence that the true difference is something different from 0.  To test that we need to use the distribution of the possible differences (histogram) or the __sampling distribution__ of the differences.  This will let us know if we really did obtain a freakish sample or if our results are conclusive.
+
+
+### Back to Example 1:
+
+Step 2: Perform the appropriate Statistical Test
+
+The test statistic that we need is 
+
+
+$$t=\frac{(\bar{y}_1-\bar{y}_2)-\Delta_0}{s_{\bar{y_1}-\bar{y_2}}}$$
+where 
+
+$$s_{\bar{y_1}-\bar{y_2}}=\sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}$$
+
+Recall the t-distribution requires a parameter of degrees of freedom or df to calculate probabilities.  In the test that we will perform (above) we will not be willing to make the assumption that the variances of each sample are equal and as such the df value for our test statistic is:
+
+
+
+$$\text{df}=\frac{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}{(\frac{s_1^2}{n_1})^2(\frac{1}{n_1-1})+(\frac{s_2^2}{n_2})^2(\frac{1}{n_2-1})} $$ 
+OK, so we will test the following hypothesis:
+
+$$H_0: \mu_A-\mu_B=0$$
+
+$$H_A: \mu_A - \mu_B \neq 0$$
+But recall, we can also test:
+
+$$H_A: \mu_A-\mu_B >0$$
+since really that is what we want to know.  What would be the difference between testing the first and the second alternative hypothesis?
+
+*
+
+First let's test the two-sided hypothesis for ATE for everyone who visits the website (leave 0's in).  The default in r is the two sided test and the assumption that the variances are not equal and the samples are independent.
+
+```{R}
+
+t.test(Spend~Treatment, data=df)
+
+```
+
+Our test statistic is -1.499 (why is it negative?).  And from that we can calculate a p-value, which is the probability, assuming the null hypothesis it true, of observing a result equivalent or more extreme (a larger difference) than the one observed.
+
+
+What is our conclusion?
+
+*
+
+What if we tested the second alternative hypothesis?  What will be the p-value?
+
+
+*
+
+Step 3: Provide an interval estimate 
+
+We need to be able to report of the average user spend we can expect for all customers who visit the check out page if we leave variant B in place.
+
+
+
+### Confidence Intervals--Aside
+
+
+Interval Estimate=Confidence Interval.
+
+
+Interval Estimates are __always__ preferred over point estimates.  Interval estimates give information about the uncertainty in your conclusions. 
+
+What does "confidence" mean?
+
+```{r}
+
+samples<-list()
+means<-c()
+
+
+for (i in 1:100){
+  samples[[i]]<-rnorm(20, 3, 0.5)
+  means[i]<-mean(samples[[i]])
+}
+
+
+p<-lapply(samples, t.test, conf.level=0.95)
+
+lower<-c()
+upper<-c()
+
+for (i in 1:100){
+  lower[i]<-p[[i]]$conf.int[1]
+  upper[i]<-p[[i]]$conf.int[2]
+ 
+  
+}
+
+df1<-data.frame(lower, upper, means)
+df1$x<-seq(1:100)
+
+
+library(ggplot2)
+
+ggplot(df1, aes(x=x, y=means))+geom_point()+geom_errorbar(aes(ymax=upper, ymin=lower))+geom_hline(yintercept = 3, color="red")+
+  theme_bw()+ylab("Confidence Interval")+xlab("Sample Number")
+
+
+```
+
+In the above t-test output there is 95 percent confidence interval: -0.8340386  0.1111660. What does that confidence interval mean?
+
+*
+
+
+### Back to Example 1
+
+Step 4: Make a conclusion using appropriate language.
+
+
+We tested over 20,000 users which were randomly assigned to variant A or B. Variant A did not improve the user spend over for all customers who visited the website compared to the current version, variant B (p-value: 0.1339).
+
+Step 5: Provide an Interval estimate for the expected outcome given the conclusion
+
+So we think we should stay with variant B. What will be our average user spend if we stick with variant B?
+
+```{r}
+
+sub<-df %>% filter(Treatment=="B") 
+t.test(sub$Spend)
+
+```
+
+
+### Example 1: Alternative Analysis
+
+But what if we just tested the population of folks who actually made a purchase?  In other words, eliminate those who had $0 user spend from the data?
+
+```{R}
+library(tidyverse)
+sub<-df %>% filter(Spend>0)
+
+
+```
+
+
+Complete the analysis using steps 1-4 from above.
+
+```{r}
+
+
+```
+
+
+What do we do?  Which test is correct? 
+
+*
+
+
+## Randomization Tests
+
+The t-test, being a statistical test, has assumptions.  And if those assumptions are violated then the test and confidence intervals that we use are not reliable.
+
+
+Below I'm repeating the confidence interval simulation but generating the true data from a Beta distribution, which is not symmetrical.
+
+```{R}
+
+samples<-list()
+means<-c()
+set.seed(13)
+
+for (i in 1:100){
+  samples[[i]]<-rbeta(20,1,0.4) #generating skewed data
+  means[i]<-mean(samples[[i]])
+}
+
+
+p<-lapply(samples, t.test, conf.level=0.95)
+
+lower<-c()
+upper<-c()
+
+for (i in 1:100){
+  lower[i]<-p[[i]]$conf.int[1]
+  upper[i]<-p[[i]]$conf.int[2]
+ 
+  
+}
+
+df1<-data.frame(lower, upper, means)
+df1$x<-seq(1:100)
+
+
+library(ggplot2)
+
+ggplot(df1, aes(x=x, y=means))+geom_point()+geom_errorbar(aes(ymax=upper, ymin=lower))+geom_hline(yintercept = 1/(1+0.4), color="red")+
+  theme_bw()+ylab("Confidence Interval")+xlab("Sample Number")
+
+
+
+```
+
+
+One option when you feel assumptions have not been met is to use a randomization test.
+
+This is a non-parametric test that can work on any statistic.  I will introduce it specifically to compare two mean values.  
+
+Think about this. If the treatments A and B are not different (come from the same distribution) then the means of those two groups will not be different. 
+
+And if the two treatments are not different then one could shuffle the labels "A" and "B" on the observations, perform a test and still conclude that the treatments are not different.
+
+
+In words, a permutation test will take all possible permutations of two samples of data, calculate the difference between the means for each permutation and the p-value is just the proportion of means whose magnitude is greater than the magnitude of the original observed difference (two-sided p-value).
+
+For a one-sided p-value you just use the proportion either less than or greater than the original observed difference.
+
+Below is some code for some toy data.  Note this is code for a randomization test.  A true permutation test would test every possible set of samples.  
+
+In A/B testing with larger samples, a permutation test is not feasible. 
+
+
+```{R}
+
+set.seed(13)
+
+# Sample data for two groups
+groupA <- c(10, 12, 15, 14, 11)
+groupB <- c(15, 17, 13, 20, 14)
+
+# Observed test statistic
+observed_statistic <- mean(groupA) - mean(groupB)
+
+# Number of random permutations
+num_permutations <- 10000
+
+# Initialize an empty vector to store permutation test statistics
+permutation_stats <- numeric(num_permutations)
+
+# Perform random permutations and calculate test statistics
+for (i in 1:num_permutations) {
+  # Combine the data and shuffle the order
+  combined_data <- c(groupA, groupB)
+  shuffled_data <- sample(combined_data, replace = FALSE)
+  
+  # Calculate the test statistic for this permutation
+  perm_statistic <- mean(shuffled_data[1:length(groupA)]) - mean(shuffled_data[(length(groupA) + 1):(length(groupA) + length(groupB))])
+  
+  # Store the permutation test statistic
+  permutation_stats[i] <- perm_statistic
+}
+
+# Calculate the p-value
+p_value <- mean(abs(permutation_stats) >= abs(observed_statistic))
+
+# Display the p-value
+cat("P-value:", p_value, "\n")
+
+
+```
+
+
+```{r}
+hist(permutation_stats, breaks=25)
+abline(v=observed_statistic, col="red")
+abline(v=-observed_statistic, col="red")
+
+```
+
+Let's perform the randomization test on Example data. This will take a minute to run.
+
+```{R}
+
+# Sample data for two groups
+groupA <- df$Spend[df$Treatment=="A"]
+groupB <- df$Spend[df$Treatment=="B"]
+
+# Observed test statistic
+observed_statistic <- mean(groupA) - mean(groupB)
+
+# Number of random permutations
+num_permutations <- 10000
+
+# Initialize an empty vector to store permutation test statistics
+permutation_stats <- numeric(num_permutations)
+
+# Perform random permutations and calculate test statistics
+for (i in 1:num_permutations) {
+  # Combine the data and shuffle the order
+  combined_data <- c(groupA, groupB)
+  shuffled_data <- sample(combined_data, replace = FALSE)
+  
+  # Calculate the test statistic for this permutation
+  perm_statistic <- mean(shuffled_data[1:length(groupA)]) - mean(shuffled_data[(length(groupA) + 1):(length(groupA) + length(groupB))])
+  
+  # Store the permutation test statistic
+  permutation_stats[i] <- perm_statistic
+}
+
+# Calculate the p-value
+p_value <- mean(abs(permutation_stats) >= abs(observed_statistic))
+
+# Display the p-value
+cat("P-value:", p_value, "\n")
+
+```
+
+Interestingly even with all of the 0's the p-value is very close the `t.test()` value. For border line p-values, and data that is not normal (like data with a bunch of 0's) it is probably worth checking the permutation test p-value as well.  
+
+
+Steps for a Randomization Test for a mean:
+
+1. Calculate the test statistic $t=\bar{x}_A-\bar{x}_B$ on the original sample.
+
+2. Resample the data without replacement so that $n_A$ observations are randomly associated with a resampled "condition 1": $(y_{11}^*, y_{21}^*, y_{n_A1}^* )$ and $n_B$ observations are randomly associated with a resampled "condition 2": $(y_{12}^*, y_{22}^*, y_{n_b1}^* )$.
+
+3. Calculate the value of the test statistic labeled $t^*$ on this resampled data.
+
+4. Repeat steps 2 and 3 $N$ times ($N$=1000 or 2000 are common choices).
+
+5. Compare the $t$ to the null distribution which is derived from the $N$ resampled values of $t^*$, and calculate the p-value.
+
+## Some Python Code
+
+```{r}
+library(reticulate)
+
+
+```
+
+
+```{python}
+
+import pandas as pd
+
+df = pd.read_csv("I:\\Classes\\ISA 633\\2. AB Testing\\ab testing continuous\\ab_revenue.csv")
+
+print(df.head())
+
+summary_df = df.groupby('Treatment').agg({'Spend': ['mean', 'std', 'count']}).reset_index()
+
+summary_df.columns = ['Treatment', 'mean', 'sd', 'n']
+
+print(summary_df)
+```
+
+
+
+```{python}
+
+import pandas as pd
+from plotnine import ggplot, aes, geom_text, xlab, ylab, theme_bw, theme, geom_boxplot, element_text
+
+# Creating the plot
+plot = (ggplot(df, aes(x='Treatment', y='Spend')) +
+       geom_boxplot()+
+        theme_bw() +
+        theme(axis_title=element_text(size=18)))
+
+# Displaying the plot
+print(plot)
+
+
+```
+
+```{python}
+from scipy import stats
+
+data_a = df[df['Treatment'] == 'A']['Spend']
+data_b = df[df['Treatment'] == 'B']['Spend']
+
+t_stat, p_value = stats.ttest_ind(data_a, data_b)
+
+
+print(f'T-statistic: {t_stat}')
+print(f'P-value: {p_value}')
+
+t_stat, p_value = stats.ttest_ind(data_a, data_b, alternative='less')
+print(f'T-statistic: {t_stat}')
+print(f'P-value: {p_value}')
+
+sub = df[df['Spend'] > 0]
+
+
+```
+
+
+```{python}
+import numpy as np, statsmodels.stats.api as sms
+
+
+cm = sms.CompareMeans(sms.DescrStatsW(data_a), sms.DescrStatsW(data_b))
+
+
+print(cm.tconfint_diff(usevar='unequal'))
+
+```
+
+
+```{python}
+
+import pandas as pd
+from scipy import stats
+
+
+sub = df[df['Treatment'] == 'B']
+
+t_stat, p_val = stats.ttest_1samp(sub['Spend'], popmean=0)
+
+print(f"T-statistic: {t_stat}")
+print(f"P-value: {p_val}")
+
+
+```
+
+```{python}
+import numpy as np, scipy.stats as st
+
+st.t.interval(0.95, len(data_b)-1, loc=np.mean(data_b), scale=st.sem(data_b))
+
+
+```
+
+Randomization Test
+
+```{python}
+
+import numpy as np
+
+# Sample data for two groups
+groupA = np.array([10, 12, 15, 14, 11])
+groupB = np.array([15, 17, 13, 20, 14])
+
+# Observed test statistic
+observed_statistic = np.mean(groupA) - np.mean(groupB)
+
+# Number of random permutations
+num_permutations = 10000
+
+# Initialize an empty array to store permutation test statistics
+permutation_stats = np.empty(num_permutations)
+
+# Perform random permutations and calculate test statistics
+for i in range(num_permutations):
+    # Combine the data and shuffle the order
+    combined_data = np.concatenate((groupA, groupB))
+    np.random.shuffle(combined_data)
+
+    # Calculate the test statistic for this permutation
+    perm_statistic = np.mean(combined_data[:len(groupA)]) - np.mean(combined_data[len(groupA):])
+
+    # Store the permutation test statistic
+    permutation_stats[i] = perm_statistic
+
+# Calculate the p-value
+p_value = np.mean(np.abs(permutation_stats) >= np.abs(observed_statistic))
+
+# Display the p-value
+print("P-value:", p_value)
+
+
+```
