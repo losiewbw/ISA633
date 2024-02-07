@@ -1,0 +1,60 @@
+---
+title: "Wired Article Questions"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+Please read "The Strange and Twisted Tale of Hydroxychloroquine" and answer the following questions.  Where it is required for you to answer using mathematical equations, please do so in this document.  You may see the .RMD file of the note set I posted for help on how to get equations in Markkdown.  For an inline equation do this $x=4_i+5$.  For an equation on its own line do this:
+
+$$x=4_i+5^2$$
+If you are familiar and know how, you can use a .tex document to in place of a Markdown.
+
+1.	For Boulware’s trial to prevent illness in people exposed to an infected person where W is the indicator of exposure (1 if exposed, 0 if not) write in mathematical form the equation for the true ATE.
+
+$ATE$: Average Treatment Effect
+
+$$ATE=E[\delta_i]=E[Y_i^1-Y_i^0]=E[Y_i^1]-E[Y_i^0]$$
+
+
+2.	What is the equation for the true ATT?
+
+$$ATT=E[\delta_i|D_i=1]=E[Y_i^1-Y_i^0|D_i=1]=E[Y_i^1|D_i=1]-E[Y_i^0|D_i=1]$$
+
+3.	ATU?
+
+$$ATU=E[\delta_i|D_i=0]=E[Y_i^1-Y_i^0|D_i=0]=E[Y_i^1|D_i=0]-E[Y_i^0|D_i=0]$$
+
+4.	Using the framework of causal inference, describe the issue or potential issues with using the Silicon Valley approach to studying the effect of hydroxychloroquine.  Be sure to put this in the language of causal inference. Feel free to use equations to help explain.
+
+The Silicon Valley approach involved simply giving everyone hydroxychloroquine and monitoring their outcomes. A potential issue with this approach is the presence of confounding variables. Confounding occurs when there are factors associated with both the treatment group and the control group. If these confounding variables are not accounted for then the observed association between hydroxychloroquine use and outcomes may be biased.
+
+
+5.	Read about SUTVA on page 140-141 of Causal Inference: The Mixtape.  Describe how this assumption may or may not have been violated in Boulware’s trial.  Give specific examples. 
+
+The SUTVA assumption may have been violated in Boulware's trial if there was variation in the dosage of hydroxychloroquine given to participants in the treatment group. For example, if some participants received higher doses than others due to their weight, height, gender, etc. then their outcomes might differ due to the dosage level.
+
+
+6.	What is the main component of casual inference that a randomized controlled trial can provide that observational data is lacking?
+
+The main component of casual inference that a randomized controlled trial provides that observational data is lacking is randomization to eliminate confounding variables. Random controlled trials can help eliminate external factors impacting the data and allow for us to know if one specific change between control and target groups is the difference
+
+
+7.	What basic principle was violated when scientists used the early, seemingly successful tests of chloroquine as a basis for exploring its effects on COVID?
+
+
+The basic principle that was violated when scientists used the early tests of chloroquine as a basis for exploring its effects on COVID-19 was causal inference. Causal inference is the process of drawing conclusions about the causal relationship between variables. It involves establishing whether a particular factor causes a change in another variable by controlling for outside confounding factors.
+
+In the case of chloroquine, the early studies suggested potential for fighting against COVID-19. However, the studies were often based on observational data or did not control for confounding variables. Relying on these uncontrolled studies to make decisions about the use of chloroquine for COVID-19 treatment would violate the principle of causal inference
