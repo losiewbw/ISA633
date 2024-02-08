@@ -86,7 +86,7 @@ In most business testing the __randomization unit__ is going to be people. Peopl
 Suppose you conducted an A/B test with treatments A and B on a check-out website.  You measured the user spend as your response.  Use the data "ab_revenue.csv" to see if the variants are different.  
 
 ```{R}
-df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/ab_revenue.csv?token=GHSAT0AAAAAACN4F7RC7I7QH4HIE5XURMCSZOCQKSQ", stringsAsFactors = TRUE)
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/ab_revenue.csv", stringsAsFactors = TRUE)
 head(df)
 ```
 
@@ -111,21 +111,21 @@ What is up with that boxplot?
 
 What question to we want to answer here?
 
-*
+* Does doing A change user spend -- could be for all users or specific users?
 
 
 What are the different average treatment effects that we can test?
 
-*
+* 
 
 Regardless how to we test to see if two means are actually different?  
 
-*
+* t.test()
 
 
 Also, question, if we were to get a different sample of people, would the means and the standard deviations be the same as this sample?
 
-*
+* No
 
 What is the implication for the answer to the question above?
 
@@ -151,7 +151,7 @@ For example, let's say that the truth is that $\mu_A$=20 and $\mu_B$=15 and each
 ```{R}
 set.seed(13)
 
-dif<-c()
+dif<-c() # initialize a vector for storage
 for (i in 1:10000){
   dif[i]<-mean(rnorm(n=100, mean=20, sd=5))-mean(rnorm(n=100, mean=15, sd=5))
 }
@@ -164,7 +164,9 @@ hist(dif, breaks=40)
 
 What does the x-axis in the histogram represent?
 
-*
+* Sample mean difference between A and B
+
+The histogram is the sampling distribution of the mean difference between the sample mean of A and B
 
 What is the standard deviation of the sample differences in this histogram?
 
@@ -178,6 +180,7 @@ sd(dif)
 What should it be?
 
 $$ \sigma_{y_1-y_2}=\sqrt{Var(\bar{y_1})+Var(\bar{y_2}}) = \sqrt{\frac{\sigma_1^2}{n_1}+\frac{\sigma_2^2}{n_2}} $$
+Sigma-squared is variance
 
 ```{R}
 
@@ -213,6 +216,12 @@ $$t=\frac{(\bar{y}_1-\bar{y}_2)-\Delta_0}{s_{\bar{y_1}-\bar{y_2}}}$$
 where 
 
 $$s_{\bar{y_1}-\bar{y_2}}=\sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}$$
+* s = standard deviation
+* sigma = population std dev
+* n = sample size
+* mew = pop. mean (true mean)
+* $$\mu_$$
+
 
 Recall the t-distribution requires a parameter of degrees of freedom or df to calculate probabilities.  In the test that we will perform (above) we will not be willing to make the assumption that the variances of each sample are equal and as such the df value for our test statistic is:
 
@@ -528,7 +537,7 @@ library(reticulate)
 
 import pandas as pd
 
-df = pd.read_csv("I:\\Classes\\ISA 633\\2. AB Testing\\ab testing continuous\\ab_revenue.csv")
+df = pd.read_csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/ab_revenue.csv")
 
 print(df.head())
 
