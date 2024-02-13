@@ -49,7 +49,7 @@ Of course the marketing specialist does not know what _all_ of the customers wil
 
 Could a different sample of 1000 customers show 19.5\%?
 
-Variation like this is called _sampling error_.
+**Variation like this is called _sampling error_.**
 
 We can't control this variation, but we can _predict_ exactly how much different proportions will vary from sample to sample.
 
@@ -168,12 +168,13 @@ qbeta(0.975, a, b)
 qbeta(0.025, a, b)
 
 ```
+* These intervals are called Bayesian credible intervals
 
 This interval is asymmetric around $\hat{p}$=0.015. Meaning our success rate might be a lot higher but we can't observe much lower.
  
 Using this we can find what is called [Bayesian credible interval](https://en.wikipedia.org/wiki/Credible_interval#:~:text=In%20Bayesian%20statistics%2C%20a%20credible,problems%20is%20the%20credible%20region.) (it's not a confidence interval) using the percentiles from this particular beta distribution.
 
-The +1 on the Beta parameters come from the fact that an uninformative prior was used to derive the distribution.  A prior distribution in Bayesian statistics is chosen to reflect your current or prior beliefs about how a distribution or statistic will behave.  
+_The +1 on the Beta parameters come from the fact that an uninformative prior was used to derive the distribution._  A prior distribution in Bayesian statistics is chosen to reflect your current or prior beliefs about how a distribution or statistic will behave.  
 
 The conclusions you get from a Bayesian analysis will be highly dependent on the choice of prior distribution.  The uninformative prior is the most conservative, but also will lead to wider intervals in the end. 
 
@@ -192,6 +193,9 @@ qbeta(0.975, a, b)
 qbeta(0.025, a, b)
 
 ```
+
+* b is the number of failures
+* the true number of clickthroughs will fall between 0.08 and 0.034 w/probability of 95%
 
 Find the Wald Confidence interval or traditional confidence interval.
 
@@ -235,10 +239,16 @@ pdiff
 
 ```
 
-
 This indicates that there is a 23% chance that the true success rate for A is greater than the true success rate for B. Even though B is doing better based on the 400 emails, there is still about a one in four chance that A performs better than B in the long run.
 
 This is the analysis that Google Analytics Experiments uses.  
+
+Same analysis with a prop test
+
+```{r}
+prop.test(x<-c(23,38), n<-c(200,200))
+```
+
 
 ## Python
 
