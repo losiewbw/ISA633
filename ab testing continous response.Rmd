@@ -354,22 +354,41 @@ But what if we just tested the population of folks who actually made a purchase?
 library(tidyverse)
 sub<-df %>% filter(Spend>0)
 
-
 ```
 
 
 Complete the analysis using steps 1-4 from above.
 
+Step 1: Always look at a numeric and graphical summary of the data.
+
 ```{r}
 
+library(tidyverse)
+sub %>% group_by(Treatment) %>% summarise(mean=mean(Spend), sd=sd(Spend), n=n())
 
+```
+```{r}
+boxplot(Spend~Treatment, data=sub)
+```
+
+Step 2: Perform the appropriate Statistical Test
+
+```{r}
+t.test(Spend~Treatment, data=sub)
+```
+Step 5: Provide an Interval estimate for the expected outcome given the conclusion
+
+```{r}
+sub<-sub %>% filter(Treatment=="B") 
+t.test(sub$Spend)
 ```
 
 
 What do we do?  Which test is correct? 
 
-* 
+* I would follow the second test and not change to version A as the current version as a higher mean spend
 
+_We tested version B and found that for people who made a purchase, there is a significant increase in user spend (95% CI [4.34, 5.57])_
 
 ## Randomization Tests
 
@@ -425,7 +444,7 @@ Think about this. If the treatments A and B are not different (come from the sam
 And if the two treatments are not different then one could shuffle the labels "A" and "B" on the observations, perform a test and still conclude that the treatments are not different.
 
 
-In words, a permutation test will take all possible permutations of two samples of data, calculate the difference between the means for each permutation and the p-value is just the proportion of means whose magnitude is greater than the magnitude of the original observed difference (two-sided p-value).
+In words, **a permutation test will take all possible permutations of two samples of data, calculate the difference between the means for each permutation and the p-value is just the proportion of means whose magnitude is greater than the magnitude of the original observed difference (two-sided p-value).**
 
 For a one-sided p-value you just use the proportion either less than or greater than the original observed difference.
 
@@ -472,7 +491,6 @@ cat("P-value:", p_value, "\n")
 
 
 ```
-
 
 ```{r}
 hist(permutation_stats, breaks=25)
@@ -538,8 +556,6 @@ Steps for a Randomization Test for a mean:
 
 ```{r}
 library(reticulate)
-
-
 ```
 
 
