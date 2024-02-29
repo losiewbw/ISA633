@@ -1,0 +1,323 @@
+---
+title: "A/B Testing: Binary Response"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1. Understand the different type of responses for testing.
+
+2. Understand the traditional test for an A/B test with a binary response.
+
+3. Understand why the traditional test might not be appropriate.
+
+4. Understand the Beta-Binomial model for proportions.
+
+5. Understand how to interpret Bayesian credible intervals.
+
+## Binary Responses
+
+Responses to A/B testing will more often than not be a binary outcome such as: "1"="purchase", "0"="did not purchase".
+
+Or click/did not click
+
+Or provide email/did not provide email
+
+etc.  
+
+A binary response is a categorical or qualitative response.  The methods used to deal with these types of responses are different than those used with continuous responses.
+
+
+## More on Sampling Variablity
+
+Let's assume you are a marketing specialist at a credit card company and you would like to offer double airline miles of customers if they increase their spending by at least $800. Of course offering airline miles is not free.  The company has to pay the airline for the added miles.  Her finance department says if 20\% of all customers increase spending by \$800 then based on past behavior the double miles will be profitable.
+
+Of course the marketing specialist does not know what _all_ of the customers will do. So she sends the offer to a random sample of 1000 customers.  In that sample she finds that 21.1\% of the cardholders increase their spending. 
+
+Could a different sample of 1000 customers show 19.5\%?
+
+**Variation like this is called _sampling error_.**
+
+We can't control this variation, but we can _predict_ exactly how much different proportions will vary from sample to sample.
+
+### The Sampling Distribution of Sample Proportions
+
+We can derive the _sampling distribution_ of all the possible sample proportions of size $n$.  This distribution of sample statistics will allow us to make statements about the sampling error.
+
+If we think of the proportion of people who increased their spending as the number of successes, $X$ out of $n$, then we can model that with a Binomial($p$) Distribution. The Binomial distribution can be modeled with the Normal Distribution as long as $np$ and $nq$ are large enough. ($q=1-p$). 
+
+That normal distribution will have mean $\mu_p=p$ where $p$ is the true proportion and standard deviation $\sigma=\sqrt{\frac{pq}{n}}$
+
+Below is an empirical sampling distribution for 1000 samples from a binomial distribution when $p=0.2$ and $n=1000$
+
+```{r}
+set.seed(13)
+samples=100
+n=1000
+p=0.2
+sim<-rbinom(samples, n, p)
+sim<-(sim/n)
+hist(sim, breaks=20)
+```
+
+The standard deviation of the sampling distribution should be 
+
+```{R}
+sqrt((p*(1-p))/n)
+
+
+```
+
+The empirical standard deviation is:
+
+
+```{R}
+
+sd(sim)
+
+```
+
+We could get it closer by increasing the number of samples.
+
+We refer to the standard deviation of a sampling distribution as the _standard error_ when we estimate it.
+
+### Problems with Proportions.
+
+Run the simulation code above for n=1000 and p=0.02.  
+
+The problem with using the normal approximation to the binomial is that it is very sensitive when the proportions are small.
+
+What do you think the response rate to a credit card offer is?
+
+For a single proportion: $\hat{p} \pm z^*\sqrt{\frac{\hat{p}\hat{q}}{n}}$ and has the conditions that $np$ and $nq$ $\geq$ 10.  If you don't know $p$ then use $\hat{p}$.
+
+The interval presented above, the Wald confidence interval, are often not appropriate for the types of problems faced in business experimentation. 
+
+
+For example, let's look at the code below to asses the coverage of the Wald confidence intervals.
+
+The coverage should be 95\%.
+
+```{r}
+z<-qnorm(0.975)
+n=50
+p<-seq(0.001,0.91,0.01)
+iter=10000
+coverage<-c()
+for (i in 1:length(p)){
+  sample<-rbinom(iter,n,p[i])
+  phat<-sample/n
+  lower=phat-z*sqrt(phat*(1-phat)/n)
+  upper=phat+z*sqrt(phat*(1-phat)/n)
+  count<-ifelse(lower<p[i] & p[i]<upper, 1, 0)
+  coverage[i]<-sum(count)/iter
+  
+}
+
+plot(p, coverage, ylim=c(0.7,1))
+abline(h=0.95, col="red")
+
+```
+
+
+## Beta Binomial Model
+
+This is a Bayesian analysis and provides an alternative way to assess our uncertainty about the sample proportion, $p$, when the data are binary.
+
+We will represent our beliefs about the true proportion, $p$, using a beta distribution. The beta distribution ranges [0,1] and is very flexible.
+
+$$P(p)=\frac{p^{a-1}(1-p)^{(b-1)}}{\beta(a,b)} $$ and
+
+$$\beta(a,b)=\frac{\Gamma(a)\Gamma(b)}{\Gamma(a+b)} $$ and the $\Gamma$ function says to
+
+$$\Gamma(z)=\int_{0}^{\infty} x^{z-1}e^{-x} dx $$.
+
+Don't panic. We can use R! And there are a qbeta, rbeta and dbeta functions!
+
+Here is what the beta distribution looks like.
+
+```{r}
+x<-seq(0,1,0.01)
+a=2
+b=2
+fx<-dbeta(x, a, b)
+plot(x, fx, type="b")
+
+```
+
+Here is the cool part.  If we have data with 3 successes and 197 failures then a reasonable representation for our beliefs about the true success rate is a beta-binomial distribution with **a=number of successes+1** and **b=number of failures+1**.  
+
+
+```{r}
+a=3+1
+b=197+1
+qbeta(0.975, a, b)
+qbeta(0.025, a, b)
+
+```
+* These intervals are called Bayesian credible intervals
+
+This interval is asymmetric around $\hat{p}$=0.015. Meaning our success rate might be a lot higher but we can't observe much lower.
+ 
+Using this we can find what is called [Bayesian credible interval](https://en.wikipedia.org/wiki/Credible_interval#:~:text=In%20Bayesian%20statistics%2C%20a%20credible,problems%20is%20the%20credible%20region.) (it's not a confidence interval) using the percentiles from this particular beta distribution.
+
+_The +1 on the Beta parameters come from the fact that an uninformative prior was used to derive the distribution._  A prior distribution in Bayesian statistics is chosen to reflect your current or prior beliefs about how a distribution or statistic will behave.  
+
+The conclusions you get from a Bayesian analysis will be highly dependent on the choice of prior distribution.  The uninformative prior is the most conservative, but also will lead to wider intervals in the end. 
+
+ The addition of 1 will really matter when the sample size is small and not really at all when the sample size is large.
+
+
+### Example: Individual Intervals
+
+Consider an ad that has 375 views and only 6 clickthroughs. The proportion of views that get clickthroughs is 6/375= 0.016. What is the 95% credible interval for the true population proportion?  Find the credible interval.
+
+```{R}
+
+a=6+1
+b=(375-6)+1
+qbeta(0.975, a, b)
+qbeta(0.025, a, b)
+
+```
+
+* b is the number of failures
+* the true number of clickthroughs will fall between 0.08 and 0.034 w/probability of 95%
+
+Find the Wald Confidence interval or traditional confidence interval.
+
+
+```{r}
+
+prop.test(x=6, n=375)
+
+```
+
+
+## Comparing Two Proportions
+
+To use the Beta-Binomial model we need to find the joint posterior distribution and integrate over the values of the true $p_A$ and $p_B$. 
+
+Or, we can use R and simulate.
+
+To compare these two proportions numerically we randomly sample from each of the distributions and compute the number of times that the random draw from distribution A is greater than distribution B. 
+
+The number of times the random draw from distribution A exceeds B divided by the total number of draws approximates $P(p_A>p_B)$.
+
+
+
+```{r}
+iter=100000
+a=23+1
+b=177+1
+a1=28+1
+b1=172+1
+count<-c()
+for (i in 1:iter){
+A<-rbeta(1, a, b)
+B<-rbeta(1, a1, b1)
+count[i]<-ifelse(A>B, 1, 0)
+
+
+}
+pdiff<-sum(count)/iter
+pdiff
+
+
+```
+
+This indicates that there is a 23% chance that the true success rate for A is greater than the true success rate for B. Even though B is doing better based on the 400 emails, there is still about a one in four chance that A performs better than B in the long run.
+
+This is the analysis that Google Analytics Experiments uses.  
+
+Same analysis with a prop test
+
+```{r}
+prop.test(x<-c(23,38), n<-c(200,200))
+```
+
+
+## Python
+
+```{r}
+library(reticulate)
+
+```
+
+```{python}
+
+from scipy.stats import beta
+
+a = 3 + 1
+b = 197 + 1
+
+# Calculate the 97.5th percentile (upper quantile)
+q975 = beta.ppf(0.975, a, b)
+
+# Calculate the 2.5th percentile (lower quantile)
+q025 = beta.ppf(0.025, a, b)
+
+print("97.5th percentile:", q975)
+print("2.5th percentile:", q025)
+
+
+from statsmodels.stats.proportion import proportion_confint
+
+# Example values for count and nobs
+count = 6  # Number of successes
+nobs = 375  # Total number of trials
+
+# Calculate a 95% confidence interval using the default 'normal' method which is going to be different from  which uses Wilsons' method.
+conf_int = proportion_confint(count, nobs, alpha=0.05)
+
+# Display the confidence interval
+print("Confidence Interval:", conf_int)
+
+
+
+
+
+```
+
+
+```{python}
+
+import numpy as np
+
+# Number of iterations
+iter = 100000
+
+# Parameters for the Beta distributions
+a = 23 + 1
+b = 177 + 1
+a1 = 28 + 1
+b1 = 172 + 1
+
+# Initialize an empty array to store results
+count = np.zeros(iter, dtype=int)
+
+# Perform the simulation
+for i in range(iter):
+    A = np.random.beta(a, b, 1)
+    B = np.random.beta(a1, b1, 1)
+    count[i] = 1 if A > B else 0
+
+# Calculate the proportion where A > B
+pdiff = np.sum(count) / iter
+
+print("Proportion A > B:", pdiff)
+
+```

@@ -86,7 +86,7 @@ In most business testing the __randomization unit__ is going to be people. Peopl
 Suppose you conducted an A/B test with treatments A and B on a check-out website.  You measured the user spend as your response.  Use the data "ab_revenue.csv" to see if the variants are different.  
 
 ```{R}
-df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/ab_revenue.csv?token=GHSAT0AAAAAACN4F7RC7I7QH4HIE5XURMCSZOCQKSQ", stringsAsFactors = TRUE)
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/ab_revenue.csv", stringsAsFactors = TRUE)
 head(df)
 ```
 
@@ -107,25 +107,25 @@ boxplot(Spend~Treatment, data=df)
 
 What is up with that boxplot?
 
-*
+* It does not provide much information - hard to tell difference in spend
 
 What question to we want to answer here?
 
-*
+* Does doing A change user spend -- could be for all users or specific users?
 
 
 What are the different average treatment effects that we can test?
 
-*
+* 
 
 Regardless how to we test to see if two means are actually different?  
 
-*
+* t.test()
 
 
 Also, question, if we were to get a different sample of people, would the means and the standard deviations be the same as this sample?
 
-*
+* No
 
 What is the implication for the answer to the question above?
 
@@ -151,7 +151,7 @@ For example, let's say that the truth is that $\mu_A$=20 and $\mu_B$=15 and each
 ```{R}
 set.seed(13)
 
-dif<-c()
+dif<-c() # initialize a vector for storage
 for (i in 1:10000){
   dif[i]<-mean(rnorm(n=100, mean=20, sd=5))-mean(rnorm(n=100, mean=15, sd=5))
 }
@@ -164,7 +164,9 @@ hist(dif, breaks=40)
 
 What does the x-axis in the histogram represent?
 
-*
+* Sample mean difference between A and B
+
+The histogram is the sampling distribution of the mean difference between the sample mean of A and B
 
 What is the standard deviation of the sample differences in this histogram?
 
@@ -178,6 +180,7 @@ sd(dif)
 What should it be?
 
 $$ \sigma_{y_1-y_2}=\sqrt{Var(\bar{y_1})+Var(\bar{y_2}}) = \sqrt{\frac{\sigma_1^2}{n_1}+\frac{\sigma_2^2}{n_2}} $$
+Sigma-squared is variance
 
 ```{R}
 
@@ -213,6 +216,12 @@ $$t=\frac{(\bar{y}_1-\bar{y}_2)-\Delta_0}{s_{\bar{y_1}-\bar{y_2}}}$$
 where 
 
 $$s_{\bar{y_1}-\bar{y_2}}=\sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}$$
+* s = standard deviation
+* sigma = population std dev
+* n = sample size
+* mew = pop. mean (true mean)
+* $$\mu_$$
+
 
 Recall the t-distribution requires a parameter of degrees of freedom or df to calculate probabilities.  In the test that we will perform (above) we will not be willing to make the assumption that the variances of each sample are equal and as such the df value for our test statistic is:
 
@@ -224,6 +233,9 @@ OK, so we will test the following hypothesis:
 $$H_0: \mu_A-\mu_B=0$$
 
 $$H_A: \mu_A - \mu_B \neq 0$$
+* In hypothesis statements, the mew is a parameter
+* The p-value will be larger in a two-sided test as the p-value is divided by two from the two ends
+
 But recall, we can also test:
 
 $$H_A: \mu_A-\mu_B >0$$
@@ -238,6 +250,9 @@ First let's test the two-sided hypothesis for ATE for everyone who visits the we
 t.test(Spend~Treatment, data=df)
 
 ```
+* The confidence interval ^^ is the parameter of meanA - meanB from the hypothesis equation above
+* From the CI we know that the outcome is likely as 0 falls in the CI
+* We tested version A against the control B and found no significant difference (95% CI: -0.834, 0.111)
 
 Our test statistic is -1.499 (why is it negative?).  And from that we can calculate a p-value, which is the probability, assuming the null hypothesis it true, of observing a result equivalent or more extreme (a larger difference) than the one observed.
 
@@ -279,7 +294,7 @@ for (i in 1:100){
 }
 
 
-p<-lapply(samples, t.test, conf.level=0.95)
+p<-lapply(samples, t.test, conf.level=0.99)
 
 lower<-c()
 upper<-c()
@@ -297,7 +312,7 @@ df1$x<-seq(1:100)
 
 library(ggplot2)
 
-ggplot(df1, aes(x=x, y=means))+geom_point()+geom_errorbar(aes(ymax=upper, ymin=lower))+geom_hline(yintercept = 3, color="red")+
+ggplot(df1, aes(x=x, y=means))+geom_point()+geom_errorbar(aes(ymax=upper, ymin=lower))+geom_hline(yintercept = 3, color="red")+ylim(2.4, 3.6)+
   theme_bw()+ylab("Confidence Interval")+xlab("Sample Number")
 
 
@@ -305,7 +320,9 @@ ggplot(df1, aes(x=x, y=means))+geom_point()+geom_errorbar(aes(ymax=upper, ymin=l
 
 In the above t-test output there is 95 percent confidence interval: -0.8340386  0.1111660. What does that confidence interval mean?
 
-*
+* The red line is the true mean
+* **Confidence != Probability**
+* If confidence is decreased, the length of the bars will shrink and more bars will not cross the true mean
 
 
 ### Back to Example 1
@@ -313,7 +330,9 @@ In the above t-test output there is 95 percent confidence interval: -0.8340386  
 Step 4: Make a conclusion using appropriate language.
 
 
-We tested over 20,000 users which were randomly assigned to variant A or B. Variant A did not improve the user spend over for all customers who visited the website compared to the current version, variant B (p-value: 0.1339).
+**We tested over 20,000 users which were randomly assigned to variant A or B. Variant A did not improve the user spend over for all customers who visited the website compared to the current version, variant B (p-value: 0.1339).**
+
+* Better to put CI instead of p-value in this^^
 
 Step 5: Provide an Interval estimate for the expected outcome given the conclusion
 
@@ -325,7 +344,7 @@ sub<-df %>% filter(Treatment=="B")
 t.test(sub$Spend)
 
 ```
-
+* If we are sticking with B we would expect, on average, the user spend to increase by 3.76 to 4.49 (% or $?)
 
 ### Example 1: Alternative Analysis
 
@@ -335,22 +354,41 @@ But what if we just tested the population of folks who actually made a purchase?
 library(tidyverse)
 sub<-df %>% filter(Spend>0)
 
-
 ```
 
 
 Complete the analysis using steps 1-4 from above.
 
+Step 1: Always look at a numeric and graphical summary of the data.
+
 ```{r}
 
+library(tidyverse)
+sub %>% group_by(Treatment) %>% summarise(mean=mean(Spend), sd=sd(Spend), n=n())
 
+```
+```{r}
+boxplot(Spend~Treatment, data=sub)
+```
+
+Step 2: Perform the appropriate Statistical Test
+
+```{r}
+t.test(Spend~Treatment, data=sub)
+```
+Step 5: Provide an Interval estimate for the expected outcome given the conclusion
+
+```{r}
+sub<-sub %>% filter(Treatment=="B") 
+t.test(sub$Spend)
 ```
 
 
 What do we do?  Which test is correct? 
 
-*
+* I would follow the second test and not change to version A as the current version as a higher mean spend
 
+_We tested version B and found that for people who made a purchase, there is a significant increase in user spend (95% CI [4.34, 5.57])_
 
 ## Randomization Tests
 
@@ -406,7 +444,7 @@ Think about this. If the treatments A and B are not different (come from the sam
 And if the two treatments are not different then one could shuffle the labels "A" and "B" on the observations, perform a test and still conclude that the treatments are not different.
 
 
-In words, a permutation test will take all possible permutations of two samples of data, calculate the difference between the means for each permutation and the p-value is just the proportion of means whose magnitude is greater than the magnitude of the original observed difference (two-sided p-value).
+In words, **a permutation test will take all possible permutations of two samples of data, calculate the difference between the means for each permutation and the p-value is just the proportion of means whose magnitude is greater than the magnitude of the original observed difference (two-sided p-value).**
 
 For a one-sided p-value you just use the proportion either less than or greater than the original observed difference.
 
@@ -453,7 +491,6 @@ cat("P-value:", p_value, "\n")
 
 
 ```
-
 
 ```{r}
 hist(permutation_stats, breaks=25)
@@ -519,8 +556,6 @@ Steps for a Randomization Test for a mean:
 
 ```{r}
 library(reticulate)
-
-
 ```
 
 
@@ -528,7 +563,7 @@ library(reticulate)
 
 import pandas as pd
 
-df = pd.read_csv("I:\\Classes\\ISA 633\\2. AB Testing\\ab testing continuous\\ab_revenue.csv")
+df = pd.read_csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/ab_revenue.csv")
 
 print(df.head())
 
