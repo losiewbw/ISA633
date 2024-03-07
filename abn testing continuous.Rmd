@@ -1,0 +1,487 @@
+---
+title: "A/B/n testing: Continuous Response"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1.  Review numeric and graphical summaries for experimental data with a continuous response.
+
+2.  The ANOVA model.
+
+3.  ANOVA and regression relationship.
+
+4.  ANOVA assumptions and how to check them.
+
+5.  What to do if the assumptions are violated.
+
+6.  Unequal sample sizes in ANOVA.
+
+## Example
+
+Many companies have already tried and tested the pattern of displaying numerical social proof in some form or another. In this experiment from Airbnb on their host signup landing page, tested two social proof statements.
+
+![](airbnb_proof.png)
+
+Airbnb measured sales in this experiment. The data is contained in the file "airbnb_social.csv". Is there evidence that one treatment should be favored over another?
+
+Summarize the data numerically and graphically.
+
+```{R}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/airbnb_social.csv")
+head(df)
+```
+
+How would you describe the format of the data?
+
+-   
+
+In order to analyze this data it needs to be in the *long* format. *Long* format data has a row for each observation and the column names are not variables.
+
+-   
+
+```{r}
+library(tidyverse)
+df_long <- df %>% pivot_longer(everything(),
+                               names_to="treatment",
+                               values_to="sales")
+
+head(df_long)
+
+
+```
+
+Make numeric summary of this data.
+
+```{r}
+
+df_long %>% group_by(treatment) %>% summarise(mean=mean(sales), sd=sd(sales), n=n())
+
+
+```
+
+Make an appropriate plot of the data.
+
+```{r}
+
+boxplot(sales~treatment, data=df_long)
+
+```
+
+What is up with this data?
+
+-   
+
+What should we do? Does it matter?
+
+-   
+
+```{r}
+
+nonzero<-df_long %>% filter(sales>0)
+
+
+```
+
+Let's plot it again.
+
+```{R}
+
+nonzero %>% group_by(treatment) %>% summarise(mean=mean(sales), sd=sd(sales), n=n())
+
+```
+
+```{r}
+
+boxplot(sales~treatment, data=nonzero)
+```
+
+## ANOVA = Analaysis of Variance
+
+We will assume that each level of the treatment factor has different mean, $\mu_i$. The standard analysis for completely randomized designs is concerned with the structure of the means. We are trying to learn whether the means are all the same or if some differ from the others, and the nature of any differences that might be present.
+
+The error structure is assumed to be known except for the error variance, $\sigma^2$, which must be estimated.
+
+![](capture.jpg)
+
+We will model our CRD with
+
+$$ Y_{ij}=\mu_i+\epsilon_{ij} $$
+
+$Y_{ij}$=response for the $j^{th}$ experimental unit subject to the $i^{th}$ level of the treatment factor.
+
+This is sometimes called the cell means model with a different mean, $\mu_i$, for each level of the treatment factor. The distribution of the experimental errors, $\epsilon_{ij}$, are mutually independent due to the randomization and assumed to be normally distributed.
+
+Another way of thinking about this model is like this:
+
+$$Y_{ij}=\mu+\tau_i+\epsilon_{ij} $$
+
+*This is the effects model.* $\tau_i$ are the effects. $\tau_i$ represents the difference between the long-run average of all possible experiments at the $i^{th}$ level of the treatment factor and the overall average.
+
+$$ssE= \sum_{i=1}^{t}\sum_{j=1}^{r_i}(y_{ij}-\mu_i)^2$$.
+
+If we have included replications we can estimate the experimental error, $\sigma^2$. We estimate it using $\hat{\sigma}^2=\frac{ssE}{n-t}$.
+
+-   Yij = experimental values
+-   ui = true treatment mean
+-   This is the denominator of the F-test
+
+What is a "replication"?
+
+-   
+
+This error estimate is *critical for determining if our treatments had a significant effect on the response.*
+
+Recall $ssE= \sum_{i=1}^{t}\sum_{j=1}^{r_i}(y_{ij}-\mu_i)^2$.
+
+So the ssE is the variation in the response values not described by applying the treatment.
+
+### F-test for overall effects
+
+In our model for the completely randomized design we are interested in testing the hypotheses:
+
+$H_0$: $\mu_1=\mu_2=...\mu_t$ or $\tau_1=\tau_2=...\tau_t$
+
+$H_a$: at least two of the $\tau$s differ
+
+If the null hypothesis is true then the model $y_{ij}=\mu+\tau_i+\epsilon_{ij}$ (tau = 0) simplifies to $y_{ij}=\mu_i+\epsilon_{ij}$ which can be represented by a single normal distribution with mean $\mu$ and variance $\sigma^2$ rather than multiple normal distributions.
+
+To test these hypothesis we decompose the *total sample variation in y into two parts.* The part that comes from applying the treatments and the part that comes from the random error.
+
+$$ss\text{Total}=ss\text{T}+ ssE$$
+
+If the treatments are making a difference in the response then the variation from SST should be larger than SSE. We use a F statistic to test the ratio of these two. An ANOVA (Analysis of Variance) table represents these parts of the total variation.
+
+![](Capture5.JPG)
+
+We can get those numbers using `aov`. What should we test, the nonzero data or the whole data? (this is like, your opinion, man)
+
+```{R}
+mod1 <- aov(sales ~ treatment, data = nonzero)
+summary(mod1)
+
+```
+
+## ANOVA vs. Regression
+
+The F-test above is the same F-test that you will get out of `lm`.
+
+```{r}
+reg<-lm(aov(sales ~ treatment, data = nonzero))
+summary(reg)
+
+```
+
+So why are we using ANOVA here?
+
+-   
+
+What does the coefficient from that model for "treatmenthost" mean?
+
+-   
+
+Is that what we want to know?
+
+-   
+
+The ANOVA gives us what we want to know. Regression gives us an analysis, which is not necessarily incorrect, but it does not answer the question that we want.
+
+In this case, because the number of samples in each group are the same:
+
+```{r}
+
+nonzero %>% group_by(treatment) %>% summarise(mean=mean(sales), sd=sd(sales), n=n())
+
+```
+
+The predicted values from the regression and the predicted values from the ANOVA models will be the same:
+
+```{r}
+
+unique(mod1$fitted.values)
+unique(reg$fitted.values)
+
+```
+
+Ok, so there are only three predicted values?? What are they?
+
+The fitted values are the means of the three treatments
+
+```{r}
+mean(nonzero$sales[nonzero$treatment=="control"])
+mean(nonzero$sales[nonzero$treatment=="host"])
+mean(nonzero$sales[nonzero$treatment=="popular"])
+```
+
+## ANOVA Assumptions
+
+CAUTION: Even an OU student can figure out the code to analyze a CRD in R (A/b/n). But just because R gives you output does not imply that output is valid.
+
+In order for the above analysis to be valid, we are assuming that ssE represents *replicate* experimental units. There is no substitution for a replicate.
+
+Assuming the experiment was conducted correctly, randomized properly, replicated properly, etc., we still need to verify that our assumptions about the random error are true. Those assumptions are: (the assumptions are about the error term) **EXAM QUESTION**
+
+-   Values of error term are independent
+
+-   the probability distribution of the errors is normal
+
+-   the probability distribution of the errors have constant variance
+
+-   the probability distribution of the error has a mean = 0
+
+Recall we check the assumptions by plotting the residuals. In this case the residuals are the differences in the responses $y_{ij}$ and the treatment means $\hat{\mu}_i$.
+
+We should view:
+
+1.  A scatter plot of the residuals vs. the factor levels to check to see if the variance is constant across the various treatments.
+
+2.  A graph of the residuals vs. the predicted values (or treatment means) can show us if the variance is increasing as the mean level of the response increases.
+
+3.  A scatter plot of the residuals vs the experimental unit numbers can reveal inadequacies in randomization (violation of the independence assumption).
+
+4.  A normal probability plot of the residuals will help us check if the residuals are normally distributed.
+
+Here is some nice code (you can use all the time and adjust accordingly).
+
+```{r}
+
+par( mfrow = c(2,2) )
+plot(mod1, which=5)
+plot(mod1, which=1)
+plot(mod1, which=2)
+plot(residuals(mod1) ~ as.factor(treatment), main="Residuals vs Exp. Unit", font.main=1,data=nonzero)
+abline(h = 0, lty = 2)
+
+```
+
+### What if Assumptions are violated?
+
+Scrap the entire experiment and quit your job. NO! We can use some strategic transformations to get our residuals to look how they are supposed to.
+
+A big problem is when the variances between levels of the treatment factors are not constant. You might hear this referred to as heterogeneity of variances. Although it is hard to tell with just a few observations, you might say that we are observing this problem in our Residuals vs. Fitted values plot above.
+
+Transforming the response adjusts the response so it is line with our assumptions.
+
+![](Capture7.JPG)
+
+A transformed response will typically result in a more sensitive analysis (i.e. more likely to detect the treatment effect).
+
+A popular type of transformation is a **Box-Cox power transformation where** $Y=y^\lambda$. If the variance tends to increase as the mean increases choose a value of $\lambda$ less than one. If the variance tends to decrease then choose a value of $\lambda$ greater than 1.
+
+A common situation is when the response is actually a measure of variability.
+
+![](Capture8.JPG)
+
+In a CRD with replicates in each level of the treatment factor a way to determine the best value of $\lambda$ is to find the maximum of the log-likelihood function. The value of $\lambda$ that maximizes the log-likelihood or minimizes the ssE is the value chosen.
+
+```{r}
+library(MASS)
+bc<-boxcox(mod1)
+lambda<-bc$x[which.max(bc$y)]
+lambda
+
+```
+
+Then we can apply the transformation, although this is not necessary for our AirBnb example.
+
+```{r}
+t_nonzero<- transform(nonzero, t_sales = sales^(0.8282828))
+mod2 <- aov(t_sales ~ treatment, data = t_nonzero)
+summary(mod2)
+
+```
+
+```{r}
+par( mfrow = c(2,2) )
+plot(mod2, which=5)
+plot(mod2, which=1)
+plot(mod2, which=2)
+plot(residuals(mod2) ~ as.factor(treatment), main="Residuals vs Exp. Unit", font.main=1,data=t_nonzero)
+abline(h = 0, lty = 2)
+
+```
+
+## ANOVA when Sample Sizes are Different
+
+If the sample sizes are unequal then there is bias created and the result will differ depending upon the order the data is analyzed. Essentially those numbers will not be equal to the sample means.
+
+The solution is to use an alternative type of sums of squares, Type III sums of squares. Type III sums of square use the least squares estimate for the mean values (which as we saw when the sample sizes are equal is equal to the sample mean) instead of the sample mean.
+
+```{r}
+library(car)
+Anova(lm(sales~treatment, data=nonzero), type="III")
+
+```
+
+-   This p-value for the treatment is identical to the previous one
+
+Now I will unbalance the data.
+
+```{r}
+un_nonzero<-nonzero[-c(1000:1200),]
+un_nonzero %>% group_by(treatment) %>% summarise(mean=mean(sales), sd=sd(sales), n=n())
+```
+
+And use the Type III sums of squares.
+
+```{R}
+
+Anova(lm(sales~treatment, data=un_nonzero), type="III")
+```
+
+And here is what happens with the standard ANOVA.
+
+```{r}
+mod<-aov(sales~treatment, data=un_nonzero)
+mod
+```
+
+-   The "Estimated effect may be unbalanced" tells you that your sample sizes are different
+
+```{R}
+summary(mod)
+
+```
+
+If the sample sizes are relatively close then the conclusion will probably not matter. But if the sample sizes are really different then a check with the Type III sums of square might be warranted, particularly if the p-value is larger.
+
+## Python Code
+
+```{r}
+library(reticulate)
+#py_install("plotnine")
+
+```
+
+```{python}
+
+import pandas as pd
+
+df = pd.read_csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/airbnb_social.csv")
+
+print(df.head())
+```
+
+```{python}
+df_long = pd.melt(df, var_name='treatment', value_name='sales')
+
+print(df_long.head())
+```
+
+```{python}
+
+from plotnine import ggplot, aes, geom_boxplot, theme, theme_bw
+
+plot = ggplot(df_long, aes(x='treatment', y='sales')) + geom_boxplot() 
+        
+print(plot)
+
+```
+
+```{python}
+nonzero = df_long[df_long['sales'] > 0]
+
+plot = ggplot(nonzero, aes(x='treatment', y='sales')) + geom_boxplot() 
+        
+print(plot)
+```
+
+```{python}
+
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+# Performing ANOVA
+mod1 = ols('sales ~ treatment', data=nonzero).fit()
+anova_results = sm.stats.anova_lm(mod1)
+
+# Displaying the summary of the ANOVA
+print(anova_results)
+
+
+```
+
+```{python}
+
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import pandas as pd
+
+# Performing linear regression
+model = smf.ols('sales ~ treatment', data=nonzero).fit()
+
+# Displaying the summary of the regression
+print(model.summary())
+
+
+```
+
+```{python}
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+
+
+# Create a 2x2 subplot
+fig, axs = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Residuals vs Leverage
+sm.graphics.plot_leverage_resid2(model, ax=axs[0, 0])
+
+# Plot 2: Residuals vs Fitted
+sns.residplot(x=model.fittedvalues, y=model.resid, lowess=True, ax=axs[0, 1], 
+              line_kws={'color': 'red', 'lw': 1})
+axs[0, 1].set_title('Residuals vs Fitted')
+axs[0, 1].set_xlabel('Fitted values')
+axs[0, 1].set_ylabel('Residuals')
+
+# Plot 3: Scale-Location
+sns.regplot(x=model.fittedvalues, y=model.resid_pearson, scatter=True, 
+            ci=False, lowess=True, ax=axs[1, 0], line_kws={'color': 'red', 'lw': 1})
+axs[1, 0].set_title('Scale-Location')
+axs[1, 0].set_xlabel('Fitted values')
+axs[1, 0].set_ylabel('Standardized Residuals')
+
+# Plot 4: Residuals vs Treatment
+sns.boxplot(x='treatment', y=model.resid, data=nonzero, ax=axs[1, 1])
+axs[1, 1].set_title('Residuals vs Treatment')
+axs[1, 1].hlines(0, xmin=-0.5, xmax=1.5, colors='red', linestyles='dashed')
+
+plt.tight_layout()
+plt.show()
+
+
+```
+
+```{python}
+
+
+
+# Fit the model
+model = smf.ols('sales ~ treatment', data=nonzero).fit()
+
+# Perform Type III ANOVA
+anova_results = sm.stats.anova_lm(model, typ=3)
+
+# Display the ANOVA table
+print(anova_results)
+
+
+```

@@ -1,0 +1,252 @@
+---
+title: "Post A/B Testing: Uplift Modeling"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1. Uplift Segments (see blog post at end of notes).
+
+2. Gathering Data for Uplift Modeling (notes).
+
+3. Process for Uplift Modeling (notes).
+
+
+
+## Uplift
+
+In uplift modeling we will attempt to estimate the unit specific treatment effect $\delta_i=Y_i^1-Y^0_i$.  Clearly with an A/B test we have one of those outcomes, $Y_i^0$ or $Y^1_i$ depending on if the person received the treatment or not. With uplift modeling we are going to use machine learning to estimate the coutnerfactual \emph{what would have happened if the person did/did not receive the treatement} based on the results of an A/B test.
+
+An A-B test tells you which treatment does better on average, but says nothing about which treatment does better for which individual.
+
+Let's think about this in a political campaign for democratic congressional candidate Nathan Craft.  The campaign director would like to know which voters should be called to encourage to support Craft.  Voters that tend to vote Democratic but are not activists might be more inclined to vote for Craft if they got a call.  Active Democrats are probably already supportive of him and therefore a call to them would be wasted.  Calls to Republicans are not only wasteful but can be harmful.
+
+Here are the classic uplift segments.
+
+![](Capture6.png)
+A propensity model adds value by helping you avoid lost causes. Uplift modeling improves the targeting even further by focusing on only the customers who are in the persuadables segment.
+
+In the campaign example we will use A-B test data to develop a model that can predict whether a voter will respond positively to outreach.
+
+## Example
+
+### Gathering the Data
+
+First the campaign director conducts a survey of 10,000 voters to determine their inclination to vote Democratic. Then she conducts an experiment.  She randomly splits the sample of 10,000 voters in half and mailing a message promoting her candidate, Craft, to one half (treatment) and not to the other half (control).
+
+The next step is conducting a post-message survey of the same sample of 10,000 voters to measure whether each voter's opinion of Craft has shifted in a positive direction.  
+
+Here is preview and the data dictionary of the data.
+
+```{r}
+df<-read.csv("Persuasion.csv", stringsAsFactors = TRUE)
+
+
+```
+
+```{r, echo=FALSE}
+library(knitr)
+library(kableExtra)
+knitr::kable(head(df)) %>% 
+  kable_styling(full_width=F)
+
+```
+
+
+![](Capture8.JPG)
+
+```{r}
+
+library(tidyverse)
+df %>% group_by(MESSAGE_A, MOVED_AD) %>% summarise(n=n()) %>% mutate(freq=n/sum(n))
+```
+
+### A simple model
+
+We will develop a predictive model with MOVED_AD as the outcome variable, and various predictor variables, including the treatment MESSAGE_A.
+
+Our goal is to predict how much (positive) impact the message will have on a specific voter.  That way the campaign can direct its limited resources toward the voters who are the most persuadable.
+
+### Modeling Uplift
+
+For each voter we define:
+
+__Uplift: increase in propensity of favorable opinion after receiving message__.
+
+Here are the steps to build an uplift model to estimate the change in probability of success that comes from receiving the treatment message:
+
+1. Randomly split a data sample into treatment and control groups and conduct and A-B test.  Record the outcome (in our example that is MOVED_AD).
+
+2. Build a predictive model with this outcome variable and include a predictor variable that denotes the treatment status (in our example MESSAGE_A).
+
+3. Score this predictive model to the validation (hold out/test) partition of the data, this will yield for each validation record, its propensity of success given its treatment.
+
+4. Reverse the value of the treatment variable and re-score the same model to that partition.  This will yield for each validation (hold out/test) record its propensity of success had it received the other treatment.
+
+5. Uplift is estimated for each individual by $P(Success | Treatment=1)-P(Sucess|Treatment=0)$.
+
+6. For new data where no experiment has been performed, simply add a synthetic predictor variable for the treatment and assign it first a "1", score the model, then a "0" and score the model again.  Estimate the uplift for the new records as above.
+
+### Example Using a Random Forest
+
+First split the data (this data has been pre-partitioned).
+
+```{r}
+
+train<-subset(df, Partition=="T")
+valid<-subset(df, Partition=="V")
+
+train<-train[,-12]
+
+```
+
+Construct the cross validation samples and set up parallel processing.
+
+
+```{r}
+library(ranger)
+library(doParallel)
+library(caret)
+
+set.seed(13)
+trainIndex<-train$X #X is voter id, works as the index
+cvindx<-createFolds(trainIndex, k=10, returnTrain = TRUE)
+ctrl <- trainControl(method="cv", index=cvindx, summaryFunction = twoClassSummary, classProbs = TRUE)
+
+
+
+tunegrid <- expand.grid(
+     .mtry = c(2, 4, 6, 8),
+     .splitrule = "gini",
+    .min.node.size = c(10, 20, 50)
+  )
+
+```
+
+Build the model. 
+
+```{r}
+
+
+
+cl <- makePSOCKcluster(6) #starts the cluster
+registerDoParallel(cl)
+
+
+rforest<-train(MOVED_AD~., data=train[, 2:11], method="ranger", tuneGrid=tunegrid, metric="ROC", 
+               num.trees=500, importance="impurity", trControl=ctrl )
+
+stopCluster(cl) #stop the cluster
+
+
+rforest
+```
+
+Then get predicted values for the hold out sample.
+
+```{r}
+p.treat<-predict(rforest, newdata = valid, type="prob")
+
+```
+
+Then we flip the treatment variables, MESSAGE_A, in the validation set and get the predictions again.
+
+```{R}
+valid$MESSAGE_A_Flip<-ifelse(valid$MESSAGE_A==1, 0, 1)
+
+valid<-valid[,-10] #select would not work when I was making these notes.
+
+colnames(valid)[12]<-c("MESSAGE_A") #columns have to have the same name.
+
+p.flip<-predict(rforest, newdata = valid, type="prob")
+```
+
+Then we can combine the predicted values with the original data and calculate the uplift.
+
+```{R}
+df<-read.csv("Persuasion.csv", stringsAsFactors = TRUE)
+valid<-subset(df, Partition=="V")
+valid$p.treat<-p.treat[2]
+valid$p.flip<-p.flip[2]
+valid$MESSAGE_A_Flip<-ifelse(valid$MESSAGE_A==1, 0, 1)
+```
+
+
+Now we can calculate the uplift.  We need to find $P(\text{MOVED_AD}|\text{MESSAGE_A}=1)-P(\text{MOVED_AD}|\text{MESSAGE_A}=0)$
+
+In this dataset: p.treat represents $P(\text{MOVED_AD}|\text{MESSAGE_A}=1)$ and p.flip represents $P(\text{MOVED_AD}|\text{MESSAGE_A}=0)$
+
+```{R}
+Message_A_1<-filter(valid, MESSAGE_A=="1")
+
+```
+
+So the uplift would be
+
+```{r}
+Message_A_1$uplift<-Message_A_1$p.treat-Message_A_1$p.flip
+
+```
+
+And for this dataset: p.treat represents $P(\text{MOVED_AD}|\text{MESSAGE_A}=0)$ and p.flip represents $P(\text{MOVED_AD}|\text{MESSAGE_A}=1)$
+
+```{r}
+Message_A_0<-filter(valid, MESSAGE_A=="0")
+
+```
+
+So the uplift would be:
+
+```{R}
+Message_A_0$uplift<-Message_A_0$p.flip-Message_A_0$p.treat
+
+```
+
+Now what you could do is combine the data back together and then sort to find the characteristics of the folks with the highest uplift.
+
+```{r}
+final<-rbind(Message_A_1, Message_A_0)
+
+final <- final %>% arrange(desc(uplift))
+
+```
+
+
+Now we can can just send mailings to folks with positive uplift.  Uplift modeling is mainly used in marketing, and recently in political campaigns.
+
+It has two main purposes:
+
+* To determine whether to send someone a persuasion message or just leave them alone.
+
+* When a message is definitely going to be sent, to determine which message, among several possibilities to send.
+
+
+## Using on New data
+
+Ok, so you've preformed your A/B test, calculated your uplift.  But how does this translate to new observations?
+
+Your new observations will not have been involved in the A/B test.  So what you do is run the observation with a 1=treatment and a 0=treatment and calculate the uplift as the difference between those two probabilities. 
+
+## Resources
+
+You can read some blog posts [here](https://towardsdatascience.com/a-quick-uplift-modeling-introduction-6e14de32bfe0) and get a Python example [here](https://towardsdatascience.com/uplift-modeling-e38f96b1ef60)
+
+
+## Python Code
+
+You all can do this from ISA 591 :)  Don't worry, you will get practice in homework!
+

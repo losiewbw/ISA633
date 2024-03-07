@@ -1,0 +1,256 @@
+---
+title: "A/B Testing: Errors and Power"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+
+## Topics Covered
+
+1. Definition of type I error.
+
+2. Consequences of a type I error in testing.
+
+3. Definition of a type II error.
+
+4. Consequences of a type II error in testing.
+
+5. Relationship between type II errors and power.
+
+6. Power analysis for a continuous response.
+
+7. Power analysis for a binary response.
+
+8. Dangers of power analyses.
+
+
+## Errors
+
+We have to acknowledge that when we are experimenting or testing there are four possible outcomes.
+
+
+
+![](mod12-errors1.png)
+
+
+### Type I errors
+
+You may remember we use a $\alpha$ value to compare our p-value to.  
+
+A type I error is when we accept an alternative hypothesis that is not true, false positive in testing. 
+
+$\alpha$ is the probability we make a type I error and we specify it in advance.  Why? 
+
+
+The rate comes from the face that the theory behind hypothesis testing is based on is repeated sampling.  
+
+
+Let's look at this sampling distribution again.  There are samples that come from this distribution that would have a test statistic of 3.  
+
+The probability of observing those sample statistics is really small.  But they exist.  So when we set a type I error rate we are acknowledging that we _could_ be drawing a sample statistic from those unlikely places in the distribution and we are willing to accept a certain level of risk.
+
+```{r, echo=FALSE}
+
+x <- seq(-4, 4, length=1000)
+y <- dnorm(x, mean=0, sd=1)
+plot(x, y, type="l", lwd=2, axes=FALSE, ylab="", xlab="")
+axis(1, at = -4:4, labels = c("-4", "-3", "-2", "-1", "0", "1", "2", "3", "4"))
+
+```
+
+
+When we set a type I error rate, $\alpha$ we are acknowledging that in repeated testing, x% of the time we would make a type I error.  And of course, we have the ability to choose the value we are comfortable with.  
+
+What is the consequence for choosing a small $\alpha$ value?
+
+* smaller chance of obtaining a false positive but a larger chance of false negative
+
+Large?
+
+* larger chance of obtaining a false positive but a smaller chance of a false negative    
+
+
+
+### Type II errors
+
+A type II error is when our null hypothesis is false and we fail to reject that hypothesis. We assign $\beta$ as the probability that a type II error is made.
+
+But how do we assign a probability to $\beta$ if we don't what the value of the true parameter really is?  
+
+We have to compute values of $\beta$ for any parameter value in the alternative hypothesis. But what value do you pick?
+
+
+![](type2.png)
+
+One way to focus our attention is by thinking about _effect size_.  
+
+That is to ask "How big of a difference would matter to our test?"  
+
+
+
+__Example:__ Suppose a charity wants to test whether placing personalized address labels in the envelope along with a request for a donation increases the response rate above the baseline of 5\%.  If the minimum response that would pay for the address labels is 6\%, they would calculate $\beta$ for the alternative $p=0.06$. 
+
+
+## Power Calculation for A/B Tests
+
+The power of a statistical test is defined as the probability of a statistical test being able to detect a change from the null hypothesis at a given type I error rate.
+
+It is related to a type II error: $\text{Power}=1-\beta$.
+
+The power of a test to detect a certain difference is easier to think about than the type II error. 
+
+### Power for a t-test for means
+
+There is a built in function for testing the power associated with a particular t-test for the difference between two means.  There are 5 arguments for this function:
+
+*`delta`=the difference between the means you wish to detect
+
+*`sd`=the standard deviation of each group. You can only give one value, implicitly assuming the variances are equal.
+
+*`sig.level`=type I error rate
+
+*`n`=sample size in each group
+
+*`power`=$1-\beta$.  Typically we want this value to be high, to minimize the probability of a type II error.
+
+If you specify 4 out 5 arguments the function will give you the 5th.
+
+
+```{r}
+
+power.t.test(delta=15, sd=30, sig.level=0.05, n=NULL, power=0.80)
+
+
+```
+
+
+Here we can see that for a given sample size, variability, $\alpha$ level that increasing the difference we wish to detect increases the power.
+
+```{r}
+results<-c()
+d<-c(5, 10, 15, 30, 35, 40, 45, 50, 60, 65)
+for(i in 1:length(d)){
+  results[i]<-power.t.test(delta=d[i], n=100, sd=30, sig.level=0.05, power=NULL)$power
+}
+
+plot(d, results, xlab="delta", ylab="power")
+abline(h=0.8, col="red")
+
+```
+
+I will leave it up to you to discover the relationship between the other arguments and power.
+
+Often times we are able to know (1) the difference that is justifiable in terms of the business problem and (2) the power we want to maintain.  So most commonly, power calculations are used to determine sample size required.
+
+Example:  To justify implementing a change in the check-out procedure the mean user spend must increase by \$0.50.  From historical data you know the standard deviation of user spend is \$25. Your company policy is to use $\alpha=0.05$ and a power greater than 0.8.  How many samples are required for each variant?
+
+```{r}
+
+power.t.test(n=NULL, sd=25, sig.level = 0.05, power=0.8, delta=0.50)
+
+```
+
+### Power for a test of proportions
+
+Since power is more of a guideline (due to the assumptions that must be made) we will just use the power calculation for the `prop.test` .  Knowing that if we use the beta-binomial method of analysis we might have different results.
+
+The arguments for the `power.prop.test()` function are:
+
+*`n`=sample size for each group
+
+*`p1`=proportion of one group
+
+*`p2`=proportion of second group
+
+*`sig.level`=type I error rate
+
+*`power`=$1-\beta$.  Typically we want this value to be high, to minimize the probability of a type II error.
+
+
+```{r}
+power.prop.test(n=NULL, p1=0.1, p2=0.13, sig.level = 0.05, power=.8)
+
+```
+
+
+```{R}
+results<-c()
+p2<-c(0.1, 0.12, 0.14, 0.16, 0.18, 0.2, 0.22, 0.24, 0.26)
+for(i in 1:length(p2)){
+  results[i]<-power.prop.test(p1=0.1, n=100, p2=p2[i], sig.level=0.05, power=NULL)$power
+}
+
+plot(p2, results, xlab="proportion", ylab="power")
+abline(h=0.8, col="red")
+
+```
+
+
+## Concequences of Different Errors
+
+What is more consequential in an experiment in business? A type I or type II error?
+
+* Type I
+
+
+
+## Python
+
+```{r}
+library(reticulate)
+
+```
+
+
+Interestingly the Python functions are a bit different here. To incorporate the information about the standard deviation we will have to use the effect size as a ratio of the difference to the standard deviation.
+
+```{python}
+
+
+from statsmodels.stats.power import tt_ind_solve_power
+
+mean_diff, sd_diff = 0.50, 25
+std_effect_size = mean_diff / sd_diff
+
+n = tt_ind_solve_power(effect_size=std_effect_size, alpha=0.05, power=0.8, ratio=1, alternative='two-sided')
+print('Number in *each* group: {:.5f}'.format(n))
+
+
+
+```
+
+
+This doesn't exactly match either.  You will have to do some research to figure out how to match the numbers in R...or this is the test that you prefer.  Its not drastically different.
+
+```{python}
+
+
+
+from statsmodels.stats.proportion import power_proportions_2indep
+diff=0.03
+prop2=0.13
+nobs1=1000
+power=0.8
+
+power_proportions_2indep(diff, prop2, nobs1, ratio=1, alpha=0.05, value=0, alternative='two-sided', return_results=True)
+
+
+from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
+
+samplesize_proportions_2indep_onetail(diff, prop2, power, ratio=1, alpha=0.05, value=0, alternative='two-sided')
+
+```
