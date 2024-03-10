@@ -149,11 +149,11 @@ $$\mu_{\text{A}}-\mu_{\text{B}}$$
 For example, let's say that the truth is that $\mu_A$=20 and $\mu_B$=15 and each distribution has a true standard deviation of $\sigma= 5$.  Let's say we take $n_A=n_B=100$ samples from each population.  Let's simulate the sampling distribution of our parameter of interest. For each of 10,000 times we will sample 100 outcomes from each true distribution.
 
 ```{R}
-set.seed(13)
+set.seed(633)
 
 dif<-c() # initialize a vector for storage
-for (i in 1:10000){
-  dif[i]<-mean(rnorm(n=100, mean=20, sd=5))-mean(rnorm(n=100, mean=15, sd=5))
+for (i in 1:1000){
+  dif[i]<-mean(rnorm(n=50, mean=10, sd=2))-mean(rnorm(n=50, mean=10, sd=2))
 }
 
 hist(dif, breaks=40)
