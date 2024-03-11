@@ -1,0 +1,268 @@
+---
+title: "A/B/n testing: Binary Response"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+## Example
+
+Humana ran some testing on different banners on its medicare plans. First it tested the control:
+
+![](Capture4.png)
+
+It then tested the following variants simultaneously. They measured the click through rate for each banner displayed to a randomly chosen users.
+
+![](Capture2.PNG)
+
+![](Capture3.PNG)
+
+The data is contained in the file "humana_rate.csv".
+
+```{r}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/humana_rate.csv")
+
+```
+
+```{r, echo=FALSE}
+library(knitr)
+library(kableExtra)
+knitr::kable(head(df)) %>% 
+  kable_styling(full_width=F)
+
+```
+
+Is this data wide or long?
+
+-   Wide
+
+```{r}
+library(tidyverse)
+
+df_long<- df %>% pivot_longer(everything(),
+                  names_to="treatment",
+                  values_to="clicks")
+
+```
+
+everything() = the calls argument -- basically everything in the data should be long names_to = name of the column containing the wide columns values_to = the name of the column where the values go
+
+```{r, echo=FALSE}
+library(knitr)
+library(kableExtra)
+knitr::kable(head(df_long)) %>% 
+  kable_styling(full_width=F)
+
+```
+
+If the banners had no effect then we would expect the proportions for each ad to be the same (or similar). Let's look at a numeric summary of the data
+
+```{r}
+df_long %>% group_by(treatment, clicks) %>% summarise(n=n()) %>% mutate(freq=n/sum(n))
+
+```
+
+There isn't a nice graphical method for this. Perhaps a mosaic plot, but those are often strange to look at.
+
+## Logistic Regression
+
+When the metric of interest is a proportion and the response variable is binary we can use a logistic regression to analyze the data.
+
+Our interest is testing to see if the proportions are different for the different levels of the treatment. We can think of this as testing the following null hypothesis. (m = levels of treatment)
+
+$$H_0:\pi_1=\pi_2=...=\pi_m $$
+
+Pcontrol = Pa = Pb - want to know if they are different
+
+And we will test this null hypothesis with the logistic regression model
+
+pie = p = unknown true proportion
+
+$$log(\frac{\pi_i}{1-\pi_i})=\alpha+\sum_{j=1}^{m-1}\beta_jx_{ij} $$
+
+left side = logit(p) ... logit can range from negative infinity to infinity (no bounds restrictions)
+
+p = the odds
+
+log(odds) = ...
+
+Here $Y_i$ is the binary response for unit $i=1,2,...,N$ and $\pi_i=E[Y_i]$ is the probability that unit $i$ performs some action of interest (buys, clicks, etc.).
+
+-   Cannot use regular linear regression to measure the probability (cannot keep the numbers bound from 0 to 1)
+
+    -   0 \<= piem \<= 1
+
+Within this modeling framework, we test the hypothesis above using a **likelihood ratio test (LRT)** that compares the full model (shown above) to the reduced model. The likelihood ratio test statistic is
+
+$$ t= 2 \times log(\frac{\text{Likeihood}_{\text{Full Model}}}{\text{Likelihood}_{\text{Reduced Model}}})$$
+
+$$ =2 \times [\text{Log-Likeihood}_{\text{Full Model}}] -[\text{Log-Likeihood}_{\text{Reduced Model}}]  $$
+
+which, if the null hypothesis is true should follow a Chi-square distribution.
+
+We can do this with the following logistic regression model:
+
+$$log(\frac{\pi_i}{1-\pi_i})= \alpha+\beta_Ax_{i2}+\beta_Bx_{iB}$$
+
+-   This is the "Full" model
+
+Where is $\beta_{control}$?
+
+-   Intercept
+
+To determine whether there is a difference in click-through-rate from one ad to another we test $H_0:\beta_A=\beta_B=0$.
+
+-   Looks like ANOVA H0 (where we did the F-test)
+
+    -   Not exact the same but similar type of test
+
+## Analysis Procedure
+
+We can do this test fairly easily using a built in function in R.
+
+First fit the model with the factor in it. Then use the `anova` function with the option `test="Chisq"`. This test compares the full model above to the intercept only model.
+
+$$log(\frac{\pi_i}{1-\pi_i})= \alpha$$
+
+-   This is the "Null" model (Reduced model)
+
+I change the response to a factor, this way we can check the levels and in R the second level is the "event".
+
+```{r}
+df_long$clicks<-as.factor(df_long$clicks)
+levels(df_long$clicks)
+```
+
+-   The event is always listed second if the responses are 0,1
+
+I will also change the levels of my treatment factor so that we have the control as the base in our model. The base in R by default is the highest in the alphabet.
+
+```{r}
+df_long$treatment<-as.factor(df_long$treatment)
+levels(df_long$treatment)
+```
+
+But in our case, I think the control is the better base.
+
+```{r}
+df_long$treatment<-relevel(df_long$treatment, "control", "A", "B")
+levels(df_long$treatment)
+```
+
+And I really only did this for our coefficients in this model so we can practice (remember what these mean).
+
+-   glm() = generalized linear model
+
+-   family = "binomial" makes it a logistic regression model
+
+```{R}
+mod<-glm(clicks~treatment, data=df_long, family="binomial")
+summary(mod)
+```
+
+-   Intercept = log(probability) = -3.2159 + 0.3301Xa + .3011Xb
+
+    -   Xa = {1: if treatment A, 0: otherwise}... vice versa for Xb
+
+    -   0.3301 means "If the treatment is A, then -3.2159 + 0.3301 (1) = -2.8858
+
+        -   exp(0.3301) = 1.391107 = When viewers saw version A, their odds of clicking will increase by a factor of 1.39 compared to the control
+
+        -   probability = exp(-2.8858) = 0.0558
+
+            -   When viewers saw version A, the odds of clicking vs not clicking [changed]{.underline} by a factor of 0.0558 (multiplicative factor)
+
+Regardless of how you level your factors, you will get the same p-value below. This p-value represents the
+
+```{r}
+
+anova(mod, test="Chisq")
+
+```
+
+-   This is comparing the NULL value to the full model with the treatments in it
+
+What is this p-value telling us?
+
+-   The treatments (different banners) do not show different true proportions
+
+    -   With a close p-value it could be worth getting more data
+
+-   Does not tell if A or B is different from control (probably not), but shows that none of the banners are increasing the click through rate
+
+## Python Code
+
+```{r}
+library(reticulate)
+
+```
+
+```{python}
+import pandas as pd
+
+df = pd.read_csv("I:\\Classes\\ISA 633\\3. ABn testing\\abn testing binary\\humana_rate.csv")
+
+
+df_long = pd.melt(df, var_name="treatment", value_name="clicks")
+```
+
+```{python}
+
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
+full = smf.glm('clicks ~ treatment', data=df_long, family=sm.families.Binomial())
+resultfull = full.fit()
+
+# Print the summary of the model
+print(resultfull.summary())
+
+
+reduced = smf.glm('clicks ~ 1', data=df_long, family=sm.families.Binomial())
+resultreduced = reduced.fit()
+
+# Print the summary of the model
+print(resultreduced.summary())
+
+
+```
+
+This is a bit more manual, but it works.
+
+```{python}
+
+import numpy as np
+
+# Calculate the likelihood ratio
+lr_stat = 2 * (resultfull.llf - resultreduced.llf)
+
+# Degrees of freedom for the test
+df = resultfull.df_model - resultreduced.df_model
+
+from scipy.stats import chi2
+
+p_value = chi2.sf(lr_stat, df)
+
+print(f"Likelihood ratio test statistic: {lr_stat}")
+print(f"p-value: {p_value}")
+print(f"Degrees of freedom: {df}")
+
+
+
+
+
+```

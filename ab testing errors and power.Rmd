@@ -204,7 +204,7 @@ abline(h=0.8, col="red")
 
 What is more consequential in an experiment in business? A type I or type II error?
 
-* Type I
+* the most consequential error depends on the problem.  If you are just sending emails, it is probably no big deal to send a few extra to ensure you have a good response rate.  Type 2 errors can be thought of as maybe not making a change when you should have, so this might be a lost opportunity.
 
 
 

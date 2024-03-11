@@ -148,19 +148,28 @@ Yes, as this is using a feasible significane level and power, and sending 2,384 
 In a hypothetical case, a promotion for a hair care produce was sent to some members of a buyers club. Purchases were then recorded for both the members who got the promotion and those who did not. Use the data "Hair-Care-Product.csv" to answer the following questions.
 
 ```{r}
-df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/airbnb_social.csv")
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/Hair-Care-Product.csv")
+head(df)
+str(df)
 ```
-
 
 8.  What is the purchase propensity for those who did and did not received the promotion?
 
 ```{r}
-
-
-
-
+# Purchase propensity for those who received the promotion
+mean(df$Purchase[df$Promotion_ord == 1])
+```
+```{r}
+# Purchase propensity for those who did not receive the promotion
+mean(df$Purchase[df$Promotion_ord == 0])
 ```
 
 9.  Partition the data into training and validation using the Validation column. Fit an uplift model using a random forest. Do this in Python using the `reticulate` package or copy these questions to a Jupiter notebook and turn in another separate html file.
 
+
+Please view seperate HTML file
+
+
 10. Find the top 10 persuadables in the data set describe these people.
+
+

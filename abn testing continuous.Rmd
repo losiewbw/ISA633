@@ -48,11 +48,9 @@ head(df)
 
 How would you describe the format of the data?
 
--   
+-   Wide, as it has a row for each observation and each variable is represented by a separate column
 
 In order to analyze this data it needs to be in the *long* format. *Long* format data has a row for each observation and the column names are not variables.
-
--   
 
 ```{r}
 library(tidyverse)
@@ -84,11 +82,11 @@ boxplot(sales~treatment, data=df_long)
 
 What is up with this data?
 
--   
+-   Popular has slightly more sales, but each box is weighted down sales being 0
 
 What should we do? Does it matter?
 
--   
+-   Drop the 0s and re run the plot
 
 ```{r}
 
@@ -142,7 +140,7 @@ If we have included replications we can estimate the experimental error, $\sigma
 
 What is a "replication"?
 
--   
+-   Repeating an experiment or study multiple times under the same conditions
 
 This error estimate is *critical for determining if our treatments had a significant effect on the response.*
 
@@ -188,15 +186,15 @@ summary(reg)
 
 So why are we using ANOVA here?
 
--   
+-   ANOVA shows us the difference between the treatments
 
 What does the coefficient from that model for "treatmenthost" mean?
 
--   
+-   The difference between the host treatment and the control treatment
 
 Is that what we want to know?
 
--   
+-   Yes
 
 The ANOVA gives us what we want to know. Regression gives us an analysis, which is not necessarily incorrect, but it does not answer the question that we want.
 
@@ -255,7 +253,7 @@ We should view:
 
 4.  A normal probability plot of the residuals will help us check if the residuals are normally distributed.
 
-Here is some nice code (you can use all the time and adjust accordingly).
+Here is some nice code you can use all the time and adjust accordingly.
 
 ```{r}
 
