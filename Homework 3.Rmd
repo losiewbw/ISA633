@@ -1,0 +1,166 @@
+---
+title: "Homework 3"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+1.  Refer to the Kohavi et al (2009) article. Look at the example in Section 3.2.1 on page 153. Verify the sample size calculations using the Z statistics for $\alpha/2$=0.025 and $\beta$=0.2 and this formula: $$n_1=\frac{2(Z_{(1-\alpha/2)}+Z_{(1-\beta)} )^2\times \sigma^2}{\Delta^2} $$
+
+They give an approximation in their example. Compute for both responses, userspend and conversion rate. Explain the difference between these sample size numbers.
+
+```{r}
+# Users to achieve 80% power with 5% change in user spend
+((2*(1.96 + .7881)^2) * 30^2)/(3.75 * 0.05)^2
+```
+
+Now looking at a 5% change in conversion rate:
+
+```{R}
+# Users to achieve 80% power with 5% change in conversion rate
+((2*(1.96 + .7881)^2) * (0.05*(1-0.05)))/(0.05*0.05)^2
+```
+
+The difference in the sample size numbers comes from the use of the Z scores in our equation. The book uses a simpler formula using 16 \* the standard deviation divided by the difference squared. Our formula calculates the required sample sizes difference which explains the slights differences.
+
+Investigate the following relationships in terms of statistical power to detect a difference between two means. For example, below is a plot that illustrates how changing effect size (mean difference) changes the power. Using this framework, investigate the following relationships. Use power=0.8, sd=30, n=100, and $\alpha$=0.05 unless otherwise stated.
+
+```{r}
+results<-c()
+d<-c(5, 10, 15, 30, 35, 40, 45, 50, 60, 65)
+for(i in 1:length(d)){
+  results[i]<-power.t.test(delta=d[i], n=100, sd=30, sig.level=0.05, power=NULL)$power
+}
+
+plot(d, results, xlab="delta", ylab="power")
+abline(h=0.8, col="red")
+
+
+```
+
+2.  What happens to the power when the standard deviation increases and nothing else changes?
+
+```{r}
+results<-c()
+d<-c(5, 10, 15, 30, 35, 40, 45, 50, 60, 65)
+for(i in 1:length(d)){
+  results[i]<-power.t.test(delta=d[i], n=100, sd=40, sig.level=0.05, power=NULL)$power
+}
+
+plot(d, results, xlab="delta", ylab="power")
+abline(h=0.8, col="red")
+
+
+```
+Power decreases
+
+3.  What happens to the power when we increase sample size and nothing else changes?
+
+```{r}
+results<-c()
+d<-c(5, 10, 15, 30, 35, 40, 45, 50, 60, 65)
+for(i in 1:length(d)){
+  results[i]<-power.t.test(delta=d[i], n=200, sd=30, sig.level=0.05, power=NULL)$power
+}
+
+plot(d, results, xlab="delta", ylab="power")
+abline(h=0.8, col="red")
+
+
+```
+Power increases
+
+4.  What happens to the power when change the $\alpha$ level and nothing else changes?
+
+```{R}
+results<-c()
+d<-c(5, 10, 15, 30, 35, 40, 45, 50, 60, 65)
+for(i in 1:length(d)){
+  results[i]<-power.t.test(delta=d[i], n=100, sd=30, sig.level=0.1, power=NULL)$power
+}
+
+plot(d, results, xlab="delta", ylab="power")
+abline(h=0.8, col="red")
+
+```
+When the $\alpha$ level goes up, power increases
+
+```{r}
+results<-c()
+d<-c(5, 10, 15, 30, 35, 40, 45, 50, 60, 65)
+for(i in 1:length(d)){
+  results[i]<-power.t.test(delta=d[i], n=100, sd=30, sig.level=0.025, power=NULL)$power
+}
+
+plot(d, results, xlab="delta", ylab="power")
+abline(h=0.8, col="red")
+```
+
+When the $\alpha$ level decreases, power decreases
+
+5.  What happens to the sample size when we hold power=0.8 and increase the effect size?
+
+```{R}
+results<-c()
+d<-c(5, 10, 15, 30, 35, 40, 45, 50, 60, 65)
+for(i in 1:length(d)){
+  results[i]<-power.t.test(delta=d[i], n=NULL, sd=30, sig.level=0.05, power=0.8)$n
+}
+
+plot(d, results, xlab="delta", ylab="sample size")
+
+```
+```{r}
+results<-c()
+d<-c(5, 10, 15, 30, 35, 40, 45, 50, 60, 65)
+for(i in 1:length(d)){
+  results[i]<-power.t.test(delta=d[i], n=NULL, sd=30, sig.level=0.1, power=0.8)$n
+}
+
+plot(d, results, xlab="delta", ylab="sample size")
+```
+Sample size decreases
+
+You are on a marketing team at Miami University working on a project to increase brand recognition. You suggest running an email experiment where a random sample of prospective students gets one email version and another sample receives a new version. The current rate that students respond to the email is 0.23%. The Miami University marketing group would like to increase this rate by a minimum of 5%.
+
+6.  How many emails will you have to send to each group to achieve this percentage increase?
+
+```{r}
+power.prop.test(n=NULL, p1=0.23, p2=0.28, sig.level = 0.05, power=.8)
+```
+You would have to send at least 1,192 emails to each group to achieve this percentage increase
+
+7.  Is this a feasible increase to target? Why or why not?
+
+Yes, as this is using a feasible significane level and power, and sending 2,384 emails to a large university is not unfeasible
+
+In a hypothetical case, a promotion for a hair care produce was sent to some members of a buyers club. Purchases were then recorded for both the members who got the promotion and those who did not. Use the data "Hair-Care-Product.csv" to answer the following questions.
+
+```{r}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/airbnb_social.csv")
+```
+
+
+8.  What is the purchase propensity for those who did and did not received the promotion?
+
+```{r}
+
+
+
+
+```
+
+9.  Partition the data into training and validation using the Validation column. Fit an uplift model using a random forest. Do this in Python using the `reticulate` package or copy these questions to a Jupiter notebook and turn in another separate html file.
+
+10. Find the top 10 persuadables in the data set describe these people.

@@ -1,0 +1,251 @@
+---
+title: "A/B/n testing: Post Hoc Testing"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1.  How to use Tukeys test to compare treatments after ANOVA.
+
+2.  How to use Tukeys test to compare treatments after a likelihood ratio test.
+
+3.  The difference between Tukeys and Dunnetts tests.
+
+4.  How to appropriately interpret these tests.
+
+5.  When to use these post-hoc tests.
+
+6.  Why we use these tests.
+
+## Comparing all Treatments after Anova
+
+In our previous set of notes we studied completely randomized designs with one factor and we stopped the analysis after the F-test which recall only tests to see if at least two of the treatment means differ. We never actually got to the part where we decided which treatment means produce a difference.
+
+Now that you understand the problems with multiple testing you can easily see how comparing each treatment with the other treatments has exactly that issue.
+
+### Tukey HSD - adjusts the type 1 error rate
+
+-   If we had 5 treatments (5/2, all pairs of 2 we can make out of 5) = (5\*4)/2 = 10
+
+-   P(making at least one Type 1 error) = 1 - (1 - alpha)\^K
+
+    -   1-(1-0.05)\^5 = 0.4 (about 40% chance you make a Type 1 error)
+
+A good test to use is the Tukey HSD (honestly significant difference) test. This test compares each treatment mean with each other treatment mean.
+
+Here is the analysis we have done so far on social proof.
+
+```{R}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/airbnb_social.csv")
+library(tidyverse)
+df_long <- df %>% pivot_longer(everything(),
+                               names_to="treatment",
+                               values_to="sales")
+
+head(df_long)
+nonzero<-df_long %>% filter(sales>0)
+```
+
+We should probably do this all the time in R, but treatment needs to be a factor here.
+
+-   Need our treatment as a nominal factor (in R = a factor)
+
+```{r}
+
+nonzero$treatment<-as.factor(nonzero$treatment)
+mod1 <- aov(sales ~ treatment, data = nonzero)
+summary(mod1)
+
+```
+
+-   **Always check the treatment Df**. Needs to be \# levels - 1
+
+To perform the Tukey HSD test we use the `glht` function from the `multcomp` package.
+
+-   The Tukey test compares all pairs (3 combinations in this example)
+
+```{r}
+
+library(multcomp)
+tukey<-glht(mod1, linfct=mcp(treatment="Tukey"))
+cld(tukey)
+summary(tukey)
+plot(tukey)
+```
+
+-   We see that host is not significantly different than the control
+
+-   Popular is larger than control and host, and both are significant
+
+**The p-values here are adjusted for the fact that we are making 3 total comparisons here.** These results tell us that there is no difference between host and control, but that popular is greater than control and host. So what is the decision?
+
+-   The popular button appears to work better than the other two options
+
+### Dunnetts: compare to control (or baseline or best)
+
+I feel that in a business environment this test might be more useful. Certainly one of the treatments is going to be the standard treatment (in fact that is what the A is in the A/B test). So it is probably a better idea to compare the new treatment to the standard.
+
+For this type of comparison, use Dunnetts test. You can implement this test using the `multcomp` package. This package also requires `mvtnorm` and `survival`.
+
+Notice I performed a one-sided test to see if the two treatments were greater than the control. One-sided tests are less stringent than a two-sided test.
+
+```{r}
+
+library(multcomp)
+dunnett<-glht(mod1, linfct=mcp(treatment="Dunnett"), alternative="greater")
+summary(dunnett)
+plot(dunnett)
+```
+
+Here is the two-sided test.
+
+```{r}
+dunnett<-glht(mod1, linfct=mcp(treatment="Dunnett"), alternative="two.sided")
+summary(dunnett)
+plot(dunnett)
+```
+## Comparing one-sided tests vs two-sided
+
+The one-sided test has a smaller p-value, while the two-sided test is a more stringent test. By having a higher p-value for the two-sided test you need more evidence to reject the null hypothesis. 
+
+
+## Comparing all treatmetns after logistic
+
+We use the same thing!
+
+Recall we were look at click-rates of various Humana web banners.
+
+```{R}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/humana_rate.csv")
+
+df_long<- df %>% pivot_longer(everything(),
+                  names_to="treatment",
+                  values_to="clicks")
+df_long$treatment<-as.factor(df_long$treatment)
+
+```
+
+We have already performed the following analysis.
+
+```{R}
+mod<-glm(clicks~treatment, data=df_long, family="binomial")
+anova(mod, test="Chisq")
+
+```
+Now this case, since this analysis is telling us that the treatment is not making a difference (not significant chi-squared value) we WOULD NOT PEROFRM THE FOLLOWING TEST.
+
+But here is the code for the mechanics of it.
+
+```{r, eval=FALSE}
+library(multcomp)
+comps<-glht(mod, linfct = mcp(treatment="Tukey"))
+summary(comps)
+plot(comps)
+```
+
+And of course you can perform Dunnett's test as well in the same manner.
+
+## Python Code
+
+```{r}
+library(reticulate)
+
+```
+
+```{python}
+import pandas as pd
+
+df = pd.read_csv("I:\\Classes\\ISA 633\\3. ABn testing\\abn testing continuous\\airbnb_social.csv")
+
+print(df.head())
+
+df_long = pd.melt(df, var_name='treatment', value_name='sales')
+
+nonzero = df_long[df_long['sales'] > 0]
+
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+# Performing ANOVA
+mod1 = ols('sales ~ treatment', data=nonzero).fit()
+anova_results = sm.stats.anova_lm(mod1)
+
+# Displaying the summary of the ANOVA
+print(anova_results)
+
+import statsmodels.api as sm
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+import matplotlib.pyplot as plt
+
+# Assuming 'mod1' is a fitted ANOVA model and 'df' is your DataFrame
+# 'treatment' should be the column name for your treatment groups
+# 'response' should be the name of your response variable
+
+# Perform Tukey's HSD test
+tukey_result = pairwise_tukeyhsd(endog=nonzero['sales'], groups=nonzero['treatment'], alpha=0.05)
+
+# Print the summary
+print(tukey_result)
+
+# Plotting the results
+tukey_result.plot_simultaneous()
+plt.show()
+
+
+```
+
+Dunnetts is not as easy in Python. <https://scipy.github.io/devdocs/reference/generated/scipy.stats.dunnett.html>
+
+Here is some ChatGPT code (unchecked) and has not been executed.
+
+```{python, eval=FALSE}
+
+import numpy as np
+from scipy import stats
+from statsmodels.stats.multitest import multipletests
+
+# Assuming 'df' is your DataFrame, 'response' is the response variable,
+# 'treatment' is the treatment group column, and 'control_name' is the name of the control group
+
+# Separate the control group data
+control_data = df[df['treatment'] == control_name]['response']
+
+# Initialize lists to hold results
+group_names = []
+p_values = []
+
+# Perform t-test for each group against control
+for group in df['treatment'].unique():
+    if group != control_name:
+        group_data = df[df['treatment'] == group]['response']
+        t_stat, p_val = stats.ttest_ind(group_data, control_data, equal_var=False)  # Welch's t-test
+        group_names.append(group)
+        p_values.append(p_val)
+
+# Adjust p-values for multiple comparisons using Dunnett's method
+adjusted_p_values = multipletests(p_values, method='dunnett')
+
+# Output the results
+for group, p_val, adj_p_val in zip(group_names, p_values, adjusted_p_values[1]):
+    print(f"Group: {group}, P-value: {p_val}, Adjusted P-value: {adj_p_val}")
+
+
+```
+
+For binary responses.
+
+I did not find an equivalent to the `glht` function in R that would work with a logistic regression object.
