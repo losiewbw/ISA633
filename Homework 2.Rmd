@@ -58,7 +58,7 @@ You could increase the sample size
 set.seed(633)
 
 dif<-c() # initialize a vector for storage
-for (i in 1:1000){
+for (i in 1:100000){
   dif[i]<-mean(rnorm(n=500, mean=10, sd=2))
 }
 
@@ -100,7 +100,7 @@ A company that sells printer/copier supplies to small- and medium-sized business
 4. Provide an appropriate graphical and numeric summary of the experimental data.
 
 ```{R}
-data <- read.csv("AudioVideo.csv", stringsAsFactors = TRUE)
+data <- read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/AudioVideo.csv", stringsAsFactors = TRUE)
 head(data)
 ```
 ```{r}
@@ -242,7 +242,7 @@ The Bank Marketing data set contains 45,211 observations on nine variables for c
 10. The data is contained in BankData.csv. Test to see if there is a difference between the versions in the response rates. Is there a difference between version A and B in terms of the response rate? Interpret the result. Is it causal? Why or why not?
 
 ```{r}
-data <- read.csv("BankData.csv", stringsAsFactors = TRUE)
+data <- read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/BankData.csv", stringsAsFactors = TRUE)
 head(data)
 str(data)
 ```
@@ -295,6 +295,7 @@ table(data$y, data$version, data$housing)
 # Has a housing loan
 prop.test(x<-c(961,974), n<-c(12582,12548))
 ```
+
 Version does not matter to someone who has a housing loan. Again, this is not causal as there are other outside factors that impact this relationship
 
 14. Can we make the statement that because we found an effect for personal loans and did not find an effect for housing loans that there is a difference between personal loans and housing loans?
