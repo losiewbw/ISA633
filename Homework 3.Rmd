@@ -167,9 +167,8 @@ mean(df$Purchase[df$Promotion_ord == 0])
 9.  Partition the data into training and validation using the Validation column. Fit an uplift model using a random forest. Do this in Python using the `reticulate` package or copy these questions to a Jupiter notebook and turn in another separate html file.
 
 
-Please view seperate HTML file
+
+10. Find the top 10 persuadable in the data set describe these people.
 
 
-10. Find the top 10 persuadables in the data set describe these people.
-
-
+Please view separate HTML file

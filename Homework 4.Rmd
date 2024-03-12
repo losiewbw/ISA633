@@ -1,0 +1,100 @@
+---
+title: "Homework 4"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+Zappos is testing different variations of the product page to see which one generates more sales. It has created three different versions of the product page:
+
+Variation A: The original product page with the current design and layout.
+Variation B: The product page with a larger "Add to Cart" button and a different color scheme.
+Variation C: The product page with a video showing the shoes being worn and more detailed product information.
+
+For the users who made a purchase, they measured the purchase amount.  The data is contained in the file called "zappos.csv".
+
+1. Prepare the appropriate summary of the data (visual and summary statistics).
+
+```{r}
+
+```
+
+2. Is there evidence that the different website variations made a change? Provide that analysis below.
+
+```{r}
+
+```
+
+3. Which version of the website should Zappos implement (assuming they are running A right now)?
+
+```{r}
+
+```
+
+
+4. Provide a sentence and recommendation as to the average spend Zappos can expect if the version you mentioned above was implemented.
+
+```{r}
+
+
+```
+
+
+Uber conducted in the past was to test different versions of the Uber app's home screen. In this test, users were randomly assigned to one of four groups: Group A saw the original version of the home screen, Group B saw a modified version with a larger map and a different arrangement of icons, Group C saw a modified version with personalized recommendations for their next ride and Group D saw a combination of B and C. The test was run for several weeks, and Uber monitored ride bookings.
+The data is contained in the file "uber.csv".
+
+5. Provide the appropriate summary statistics for this data.
+
+```{r}
+
+
+
+
+```
+
+6. Analyze the experiment 
+
+```{r}
+
+```
+
+
+
+7. What is your conclusion?
+
+
+
+
+8. Which version is best? Provide your recommendation. 
+
+```{r}
+
+
+```
+
+
+8. If I performed 55 tests and use $\alpha=0.05$, what is the Bonferroni corrected $\alpha$ value I would use?
+
+```{r}
+
+
+```
+
+9. Suppose you went to work for Fifth Third and they gave you some A/B testing data and asked you to use several covariates to perform a subgroup analysis.  Say that they asked you to test 15 different binary variables (each category so 30 tests). What is the probability that you would make at least one type I error if your single test $\alpha=0.05$?
+
+```{r}
+
+
+```
