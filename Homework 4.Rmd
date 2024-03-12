@@ -28,29 +28,50 @@ For the users who made a purchase, they measured the purchase amount.  The data 
 1. Prepare the appropriate summary of the data (visual and summary statistics).
 
 ```{r}
+library(tidyverse)
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/zappos.csv")
+df_long <- df %>% pivot_longer(everything(),
+                               names_to = "treatment",
+                               values_to = "spend")
+df_long$treatment<- as.factor(df_long$treatment)
 
+df_long %>% group_by(treatment) %>% summarize("mean sales" = mean(spend),
+                                              "std sales" = sd(spend), "count" = n())
 ```
+```{r}
+boxplot(df_long$spend~df_long$treatment)
+```
+
 
 2. Is there evidence that the different website variations made a change? Provide that analysis below.
 
 ```{r}
-
+mod<-aov(spend~treatment, data = df_long)
+summary(mod)
 ```
+There is evidence that the one of the different website variations made a significant change
 
 3. Which version of the website should Zappos implement (assuming they are running A right now)?
 
 ```{r}
-
+library(multcomp)
+tukey<-glht(mod, linfct=mcp(treatment="Tukey"))
+cld(tukey)
 ```
-
+```{r}
+summary(tukey)
+```
+```{r}
+plot(tukey)
+```
+They should be running Version C
 
 4. Provide a sentence and recommendation as to the average spend Zappos can expect if the version you mentioned above was implemented.
 
 ```{r}
-
-
+t.test(df$C)
 ```
-
+I would recommend Zappos implements version C. If they do this they can expect the average spend amount to increase between \$47.67 to \$48.67
 
 Uber conducted in the past was to test different versions of the Uber app's home screen. In this test, users were randomly assigned to one of four groups: Group A saw the original version of the home screen, Group B saw a modified version with a larger map and a different arrangement of icons, Group C saw a modified version with personalized recommendations for their next ride and Group D saw a combination of B and C. The test was run for several weeks, and Uber monitored ride bookings.
 The data is contained in the file "uber.csv".
@@ -58,43 +79,53 @@ The data is contained in the file "uber.csv".
 5. Provide the appropriate summary statistics for this data.
 
 ```{r}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/uber.csv")
 
+df_long <- df %>% pivot_longer(everything(),
+                               names_to = "treatment",
+                               values_to = "bookings")
+df_long$treatment<- as.factor(df_long$treatment)
 
-
+df_long %>% group_by(treatment, bookings) %>% summarize(n=n()) %>% mutate(freq=n/sum(n))
 
 ```
 
 6. Analyze the experiment 
 
 ```{r}
-
+full<-glm(bookings~treatment, data=df_long, family="binomial")
+anova(full, test="Chisq")
 ```
 
 
 
 7. What is your conclusion?
 
-
+There is a significant difference between one of the treatments 
 
 
 8. Which version is best? Provide your recommendation. 
 
 ```{r}
-
+library(multcomp)
+comps<-glht(full, linfct = mcp(treatment="Tukey"))
+summary(comps)
 
 ```
 
+```{r}
+plot(comps)
+```
+There is no clear cut recommendation. All of the versions appear to be better than B, but you would need to run further tests to find if one of the versions is absolutely better than the others.
 
 8. If I performed 55 tests and use $\alpha=0.05$, what is the Bonferroni corrected $\alpha$ value I would use?
 
 ```{r}
-
-
+0.05/55
 ```
 
 9. Suppose you went to work for Fifth Third and they gave you some A/B testing data and asked you to use several covariates to perform a subgroup analysis.  Say that they asked you to test 15 different binary variables (each category so 30 tests). What is the probability that you would make at least one type I error if your single test $\alpha=0.05$?
 
 ```{r}
-
-
+1-(1-0.05)^30
 ```

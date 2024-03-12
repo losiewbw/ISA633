@@ -25,12 +25,25 @@ They give an approximation in their example. Compute for both responses, userspe
 ((2*(1.96 + .7881)^2) * 30^2)/(3.75 * 0.05)^2
 ```
 
+```{r}
+## Correct
+# Users to achieve 80% power with 5% change in user spend
+((2*(1.96 + .84)^2) * 30^2)/(3.75 * 0.05)^2
+```
+
+
 Now looking at a 5% change in conversion rate:
 
 ```{R}
 # Users to achieve 80% power with 5% change in conversion rate
 ((2*(1.96 + .7881)^2) * (0.05*(1-0.05)))/(0.05*0.05)^2
 ```
+```{r}
+## Correct
+# Users to achieve 80% power with 5% change in conversion rate
+((2*(1.96 + .84)^2) * (0.05*(1-0.05)))/(0.05*0.05)^2
+```
+
 
 The difference in the sample size numbers comes from the use of the Z scores in our equation. The book uses a simpler formula using 16 \* the standard deviation divided by the difference squared. Our formula calculates the required sample sizes difference which explains the slights differences.
 
@@ -139,6 +152,11 @@ You are on a marketing team at Miami University working on a project to increase
 ```{r}
 power.prop.test(n=NULL, p1=0.23, p2=0.28, sig.level = 0.05, power=.8)
 ```
+```{r}
+power.prop.test(n=NULL, p1=0.023, p2=0.023+0.05*0.023, sig.level = 0.05, power=.8)
+```
+**Not feasible with correct numbers**
+
 You would have to send at least 1,192 emails to each group to achieve this percentage increase
 
 7.  Is this a feasible increase to target? Why or why not?
