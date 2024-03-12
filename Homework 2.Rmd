@@ -1,0 +1,310 @@
+---
+title: "Homework 2"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+1. Use the code in the "A/B testing Continuous response" notes to simulate a sampling distribution for a sample mean. Let's say you will take samples of $n=50$ from a true normal distribution with a mean equal to 10 and standard deviation equal to 2. Make a histogram of 1000 sample means from this distribution.  You probably want to set your seed if you would like your results to be reproducible. 
+
+```{R}
+set.seed(633)
+
+dif<-c() # initialize a vector for storage
+for (i in 1:1000){
+  dif[i]<-mean(rnorm(n=50, mean=10, sd=2))
+}
+
+hist(dif, breaks=40)
+
+```
+2. Compare the empirical (calculated from your generated means above) and theoretical (what the math says it should be) means from the sampling distribution above.  
+
+```{r}
+mean(dif)
+```
+The empirical mean is 9.9975 and the theoretical mean is 10
+
+3. Compare the empirical standard deviation and the theoretical standard deviation of the sampling distribution above.
+
+```{r}
+sd(dif)
+
+2 / sqrt(50)
+```
+The empirical standard deviation is 0.2843 and the theoretical standard deviation is 2 divided by the square root of the sample size, which is 0.2828
+
+
+4. What is another name for the standard deviation that you calculated in 3?
+
+The standard error
+
+5. What could you do to get the empirical and theoretical values closer together?  Do that below.  
+
+You could increase the sample size
+
+```{R}
+set.seed(633)
+
+dif<-c() # initialize a vector for storage
+for (i in 1:1000){
+  dif[i]<-mean(rnorm(n=500, mean=10, sd=2))
+}
+
+hist(dif, breaks=40)
+
+sd(dif) # empirical standard deviation
+
+2/sqrt(500) # theoretical standard deviation
+```
+
+2. Describe three different experiments from three different companies mentioned in "The Discipline of Business Experimentation" article.
+
+1. The article discusses how Petco conducts "blind tests" to help prevent the tendency of study participants to modify their behavior while apart of an experiment. At Petco, none of their test stores' knows when there is an experiment underway. Petco ran an experiment to determine pricing for a product sold by weight. They found the best price was for a quarter pound of the product, and the price ended in $0.25. This broke the "ugly price" rule in retail, but since Petco had paid very close attention to their experiment the results were compelling
+
+2. Kohl's ran an experiment to determine if selling furniture would boost the companies revenue. While many were excited about this, the experiment found that the products that now had less floor space due to the new furniture experienced a net decrease in revenue in the test stores. This experiment highlights that experiments are often needed to objectively assess ideas
+
+3. Wawa ran an experiment to determine if they should introduce a flatbread breakfast item. While it had done well in small tests, it was ultimately killed as their thorough experiment showed that the new product would likely cannibalize other items and not lead to any net profit gain
+
+
+3. Develop your own table of data that is a business example of Simpson's Paradox.  Explain the conflict between the conclusions made from the different percentages.
+
+```{r}
+df <- data.frame(
+  Player = c("Derek Jeter", "David Justice"),
+  Year1 = c(.250, .253),  # Batting average
+  Year2 = c(.314, .321),
+  Year3 = c(.291, .329),
+  Combined = c(.300, .298)   # Number of visitors
+)
+
+# Print the data frame
+print(df)
+```
+In each individual year David Justice had a higher batting average than Derek Jeter. However, across all three years Jeter’s combined average is actually higher than Justice’s. This is an example of Simpson’s paradox. The conflict between the conclusions made from the different percentages is that if you looked at each year individually, you would conclude that Justince was a better hitter than Jeter. But if you looked at aggregate data you would come to the opposite conclusion.
+
+
+A company that sells printer/copier supplies to small- and medium-sized businesses regularly conducts audio-only sales calls to established customers. One of the managers suggests that using video in its sales calls will increase the amount that each customer purchases. Some of the sales staff are reluctant to use video; they feel that technical problems with the video streaming disrupt the flow of the call and may decrease sales.  The data is contained in "AudioVideo.csv".
+
+4. Provide an appropriate graphical and numeric summary of the experimental data.
+
+```{R}
+data <- read.csv("AudioVideo.csv", stringsAsFactors = TRUE)
+head(data)
+```
+```{r}
+library(tidyverse)
+data %>% group_by(call_type) %>% summarise(mean=mean(sales_one_week), sd=sd(sales_one_week), n=n())
+```
+```{r}
+boxplot(sales_one_week~call_type, data=data)
+```
+
+
+5. Is there evidence that there is a difference in sales between the Audio and Videos Sales calls? Why or why not?
+
+Looking at the boxplot, there appears to be a difference in sales between the Audio and Videos Sales calls, with video calls appearing to increase sales.
+
+```{r}
+t.test(sales_one_week~call_type, data=data)
+```
+The t.test shows there is evidence that video calls produce more sales than audio calls. 
+
+6. If the company implemented the video sales calls, how much sales in one week can they expect moving forward?
+
+
+```{r}
+sub<-data %>% filter(call_type=="video") 
+t.test(sub$sales_one_week)
+```
+If the company switches to video calls, they can expect sales between \$115.30 to \$126.17 in one week
+
+
+7. Repeat the analysis above in number 5 using a randomization test.  How does the p-value compare to the p-value from number 5?
+
+```{R}
+# Sample data for two groups
+groupA <- data$sales_one_week[data$call_type=="audio"]
+groupB <- data$sales_one_week[data$call_type=="video"]
+
+# Observed test statistic
+observed_statistic <- mean(groupA) - mean(groupB)
+
+# Number of random permutations
+num_permutations <- 10000
+
+# Initialize an empty vector to store permutation test statistics
+permutation_stats <- numeric(num_permutations)
+
+# Perform random permutations and calculate test statistics
+for (i in 1:num_permutations) {
+  # Combine the data and shuffle the order
+  combined_data <- c(groupA, groupB)
+  shuffled_data <- sample(combined_data, replace = FALSE)
+  
+  # Calculate the test statistic for this permutation
+  perm_statistic <- mean(shuffled_data[1:length(groupA)]) - mean(shuffled_data[(length(groupA) + 1):(length(groupA) + length(groupB))])
+  
+  # Store the permutation test statistic
+  permutation_stats[i] <- perm_statistic
+}
+
+# Calculate the p-value
+p_value <- mean(abs(permutation_stats) >= abs(observed_statistic))
+
+# Display the p-value
+cat("P-value:", p_value, "\n")
+
+```
+The p-value from the randomization test is very similar to the p-test from the t.test
+
+
+Humana tested two different banners on their homepage.  The first was quite cluttered with a full paragraph of copy and a less noticeable call-to-action.  The treatment was cleaner with a strong, obvious call to action button.  Both banners featured different photos.  The data from this test is contained in the "humana.csv" file.  
+
+8. Is there an increase in conversion rate from the new variant?  Why or why not?  Use both the beta-binomial model and a standard test.
+
+
+```{r}
+data <- read.csv("humana.csv", stringsAsFactors = TRUE)
+head(data)
+```
+
+```{r}
+data %>% group_by(variant) %>% summarise(mean=mean(conversion), sum = sum(conversion), sd=sd(conversion), n=n())
+
+```
+
+```{r}
+iter=100000
+a=520+1
+b=10000+1
+a1=837+1
+b1=10024+1
+count<-c()
+for (i in 1:iter){
+A<-rbeta(1, a, b)
+B<-rbeta(1, a1, b1)
+count[i]<-ifelse(A>B, 1, 0)
+
+
+}
+pdiff<-sum(count)/iter
+pdiff
+```
+This indicates that there is a 0% chance that the true success rate of the control group is greater than the true success rate of the treatment.  
+
+```{r}
+prop.test(x<-c(520,837), n<-c(10000,10024))
+```
+The prop.test shows that the control group has a significantly lower amount of conversions than the treatment group
+
+9. What is the expected proportion of responses if Humana implemented the new variant?  An interval estimate would be best.  Provide a sentence interpreting that interval estimate.  Again use a Bayesian credible interval and a standard test.
+
+```{R}
+a=837+1
+b=(10024-837)+1
+qbeta(0.975, a, b)
+qbeta(0.025, a, b)
+
+```
+
+
+```{r}
+prop.test(x=837, n=10024)
+```
+We are 95% confident that if Humana implemented the new variant the expected proportion of responses would be between 0.078 to 0.089
+
+
+The Bank Marketing data set contains 45,211 observations on nine variables for customers who were sent a loan offer:
+
+* age (in years)
+* job
+* marital status
+* education
+* whether or not the customer has defaulted previously (default)
+* amount of money (in dollars) in the customer's bank account (amount)
+* whether or not the person has a housing loan outstanding (housing)
+* whether or not the customer has a personal loan outstanding (loan)
+* y indicating whether he responded positively to the loan offer
+* the version of the treatment A/B
+
+10. The data is contained in BankData.csv. Test to see if there is a difference between the versions in the response rates. Is there a difference between version A and B in terms of the response rate? Interpret the result. Is it causal? Why or why not?
+
+```{r}
+data <- read.csv("BankData.csv", stringsAsFactors = TRUE)
+head(data)
+str(data)
+```
+```{r}
+table(data$y, data$version)
+```
+
+```{R}
+chisq.test(data$y, data$version)
+```
+Based on the high p-value we do not have significant evidence to conclude there is a difference in response rates between version A and B
+
+11. Check to see if having a personal loan matters to the acceptance rate of the version of the offer. What is the conclusion? Is this causal? Why or why not?  For this problem, let's use the prop.test() to make it easier.
+
+```{r}
+table(data$y, data$version, data$loan)
+```
+```{r}
+# Loan = no
+prop.test(x<-c(2347,2458), n<-c(19057,19000))
+```
+```{r}
+# Loan = yes
+prop.test(x<-c(265, 219), n<-c(3625, 3619))
+```
+It looks like having a personal loan does impact the acceptance rate of the version of the offer. While slight, the prop.test for when loan = yes has a significantly higher acceptance rate of offer A over offer B. This is not causal, however, as there are other confounding variables in this data so we can not say that having a loan causes someone to accept their offer.
+
+
+12. Let's consider whether having an excess of $1500 in a customer's bank account makes a difference. What is your conclusion? Is this causal? Why or why not?
+
+```{R}
+table(data$y, data$version, data$amount > 1500)
+```
+```{r}
+# $1500 or less
+prop.test(x<-c(1777,1734), n<-c(17290,17026))
+```
+```{r}
+# More than $1500
+prop.test(x<-c(835,943), n<-c(5392,5503))
+```
+A customer having more than \$1500 in their bank account appears to make a difference for whether they accept their version of the offer. When they have more than \$1500 there is a significant difference in accepting version B over version A. Again, this is not a causal relationship.
+
+13. Check to see if the version matters to someone who has a housing loan. Is this causal? Why or why not?
+
+```{R}
+table(data$y, data$version, data$housing)
+```
+```{r}
+# Has a housing loan
+prop.test(x<-c(961,974), n<-c(12582,12548))
+```
+Version does not matter to someone who has a housing loan. Again, this is not causal as there are other outside factors that impact this relationship
+
+14. Can we make the statement that because we found an effect for personal loans and did not find an effect for housing loans that there is a difference between personal loans and housing loans?
+
+The effect for personal loans and the absence of an effect for housing loans in the analysis results does not let us state that there is a difference between personal loans and housing loans. The analysis only establishes an association between the response rate and personal loans, without establishing causation. 
+
+
+15. There are 8 covariates. If we sliced each covariate to see if version mattered what is the probability we would make at least one type I error? Use $\alpha=0.05$.
+
+
+```{r}
+1-.95^8
+```
