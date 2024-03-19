@@ -19,50 +19,47 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ## Topics Covered
 
-1. Identifying a blocking variable.
+1.  Identifying a blocking variable.
 
-2. How to account for a blocking variable in an analysis.
+2.  How to account for a blocking variable in an analysis.
 
-3. How to create proper visualizations of experiments with blocking variables.
+3.  How to create proper visualizations of experiments with blocking variables.
 
-4. The structure of a Randomized Complete Block Design.
+4.  The structure of a Randomized Complete Block Design.
 
-5. Understand the correct degrees of freedom from an analysis in a randomized complete block design.
+5.  Understand the correct degrees of freedom from an analysis in a randomized complete block design.
 
-6. How to incorporate two blocking variables with a Latin Squares Design.
+6.  How to incorporate two blocking variables with a Latin Squares Design.
 
-7. Understand the structure of a Latin squares design.
+7.  Understand the structure of a Latin squares design.
 
-8. Understand the correct degrees of freedom from an analysis of a Latin Squares Design.
+8.  Understand the correct degrees of freedom from an analysis of a Latin Squares Design.
 
-9. Understand the implications of replication and why it is important.
+9.  Understand the implications of replication and why it is important.
 
 10. Understand the structure of a Generalized complete Block Design.
 
 11. Understand how to analyze a Generalized complete Block design.
 
-
 ## Exercise Experiment
 
 We would like to determine which of the following exercises can be performed the fastest: 10 sit-ups, 10 push-ups, 10 jumping jacks or 10 squats.
 
-
 ## Blocking
 
-In any experiment, as we have seen, variability arising from a nuisance factor can affect the results.  
+In any experiment, as we have seen, variability arising from a nuisance factor can affect the results.
 
-We define this __nuisance factor__ or __blocking factor__ as a design factor that might have an effect on the response but we are not interested in that effect.
+We define this **nuisance factor** or **blocking factor** as a design factor that might have an effect on the response but we are not interested in that effect.
 
+Sometimes this nuisance factor is unknown and uncontrolled--like we don't even know it exists and it may be changing while we perform our experiment. What helps us guard against this type of nuisance?
 
-Sometimes this nuisance factor is unknown and uncontrolled--like we don't even know it exists and it may be changing while we perform our experiment.  What helps us guard against this type of nuisance?
+-   Randomization
 
-*
-
-But sometimes the nuisance factor is known and controllable, a design technique called __blocking__ can be used to systematically eliminate its effect on the statistical comparison among treatments.
+But sometimes the nuisance factor is known and controllable, a design technique called **blocking** can be used to systematically eliminate its effect on the statistical comparison among treatments.
 
 So our model for the experiment, a completely randomized design with a blocking factor looks like this:
 
-$$Y_{ij}=\mu+b_i+\tau_j+\epsilon_{ij}$$ 
+$$Y_{ij}=\mu+b_i+\tau_j+\epsilon_{ij}$$
 
 We are still interested in testing the equality of treatment means using the treatment effects $\tau_i$.
 
@@ -74,11 +71,13 @@ But to ensure that we test against the correct denominator (yard stick) we will 
 
 $$ss\text{Total}=ss\text{T}+ ss\text{Blocks}+ ssE$$
 
+-   Every block contained a single replicate of the experiment
+
 The ANOVA table for a blocked experiment looks like this.
 
-![](Capture.jpg)
+![](images/Screenshot 2024-03-19 133702.png)
 
-
+-   If you have a blocking factor you always include it in your experiment no matter what
 
 ## Experiment with One blocking Factor
 
@@ -90,15 +89,18 @@ Incoming calls are randomly assigned to agents. When an agent gets a flat tire c
 
 What is the treatment variable?
 
-*
+-   The script
 
 What is the response variable?
 
-*
+-   number of seconds per flat tire call
 
+What is the role of agent?
+
+-   Our blocking factor
 
 ```{r}
-df<-read.csv("I:\\Classes\\ISA 633\\4. Blocking\\blocking continuous\\CallCenter.csv", stringsAsFactors = TRUE)
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/CallCenter.csv", stringsAsFactors = TRUE)
 df$agent<-as.factor(df$agent)
 ```
 
@@ -124,21 +126,19 @@ df %>% ggplot(aes(x=agent, y=seconds, group=script))+geom_text(aes(label=script)
 
 Do you think that the agent reading the script might have an effect on the length of the call?
 
-*
+-   Yes
 
-
-Clearly the agent makes a difference, but what we really want to know is __is there a script that will decrease the call time, regardless of the agent that reads it?__
-
+Clearly the agent makes a difference, but what we really want to know is **is there a script that will decrease the call time, regardless of the agent that reads it?**
 
 Question: Did we randomly assign agent?
 
-*
+-   No
 
-Agent is not a __treatment__ that was randomly assigned. 
+Agent is not a **treatment** that was randomly assigned.
 
 ### Analysis of a Randomized Complete Blocked Design
 
-The analysis is simple, you just include the blocking variable in the anova.  But, remember that __we only consider the p-value for the randomly assigned treatment variable__.
+The analysis is simple, you just include the blocking variable in the anova. But, remember that **we only consider the p-value for the randomly assigned treatment variable**.
 
 ```{r}
 
@@ -147,7 +147,7 @@ summary(mod1)
 
 ```
 
-Important: always use the degrees of freedom to check and make sure you did your analysis correctly!  
+Important: always use the degrees of freedom to check and make sure you did your analysis correctly!
 
 And of course we would want to know which script is best.
 
@@ -180,15 +180,17 @@ abline(h = 0, lty = 2)
 
 ### The Structure of the Blocked design: RCBD
 
+First, we will create a design with a single treatment factor and a single blocking factor in r "by hand". The designs that we have discussed so far are called **Randomized Complete Block Designs** or **RCBD**.
 
-First, we will create a design with a single treatment factor and a single blocking factor in r "by hand".  The designs that we have discussed so far are called __Randomized Complete Block Designs__ or __RCBD__.  
+These designs are set up so that each treatment is run within each blocking variable. In fact we are putting a **restriction on randomization** in these designs.
 
-These designs are set up so that each treatment is run within each blocking variable. In fact we are putting a __restriction on randomization__ in these designs.  
+The designs are **completely randomized within each block**. But that is all the randomization that takes place.
 
-The designs are __completely randomized within each block__. But that is all the randomization that takes place.
+-   one replication per block
+
+    -   A replicate is a complete repeat of an experiment
 
 For the call center experiment above we have 6 agents and 4 scripts. Each agent must read each script in a random order.
-
 
 ```{R}
 set.seed(13)
@@ -205,8 +207,9 @@ plan<-data.frame("Agent" = block, "treatment", "Script" = treatments)
 plan
 ```
 
+You can also use the `argicolae` package and the `design.rcbd` function. The `r` value in the `desing.rcbd()` function is the number of replications for the treatments and the number of blocks (since each treatment appears in each block one time)
 
-You can also use the `argicolae` package and the `design.rcbd` function.  The `r` value in the `desing.rcbd()` function is the number of replications for the treatments and the number of blocks (since each treatment appears in each block one time)
+-   Need to be able to recognize this structure as a RCBD
 
 ```{r}
 
@@ -218,7 +221,7 @@ levels(rcb$block) <- c("agent 1", "agent 2", "agent 3", "agent 4", "agent 5", "a
 rcb
 ```
 
-Now let's simulate some data for an analysis.  But the way, this is something I do frequently to check things are set up correctly!
+Now let's simulate some data for an analysis. But the way, this is something I do frequently to check things are set up correctly!
 
 ```{r}
 set.seed(13)
@@ -228,6 +231,10 @@ rcb
 
 And the key to checking to see if your design is set up correctly is to check the degrees of freedom in your test anova. Notice the `design.rcbd()` function already codes everything appropriately as a factor or numeric.
 
+-   Before running, check that dfs = levels - 1
+
+    -   In this case block should be 5 and script should be 3
+
 ```{r}
 mod<-aov(y~block+script, data=rcb)
 summary(mod)
@@ -235,34 +242,33 @@ summary(mod)
 
 ## Experiment with Two Blocking Factors
 
-Suppose we would like to create a plan to study the effect of the number of shelf facings on the the sales of toothpaste in drugstores.  The treatment factor is the number of shelf facings (1-4). We wish to use multiple stores in the experiment so we will need to account for that variability.  we would also like to account for the calendar week, to adjust for seasonal factors. Our response will be the weekly sales in dollars.
+Suppose we would like to create a plan to study the effect of the number of shelf facings on the the sales of toothpaste in drugstores. The treatment factor is the number of shelf facings (1-4). We wish to use multiple stores in the experiment so we will need to account for that variability. We would also like to account for the calendar week, to adjust for seasonal factors. Our response will be the weekly sales in dollars.
 
 What is the the treatment?
 
-*
+-   \# of shelf facings
 
 What is the response?
 
-*
+-   sales of toothpaste
 
 What are the blocking variables?
 
-*
-
+-   Store and week
 
 ### Latin Squares Designs
 
-Latin Squares Designs can be used whenever there are two independent blocking factors that can be used to group experimental units.  It systematically allows blocking in two directions, so there are two restrictions on randomization.
+Latin Squares Designs can be used whenever there are two independent blocking factors that can be used to group experimental units. It systematically allows [blocking in two directions]{.underline}, so there are [two restrictions]{.underline} on randomization.
 
-In general, a LSD for p treatments is a square containing $p$ rows and $p$ columns.  Each of the resulting $p^2$ cells contains one of the treatments.
+In general, a LSD for p treatments is a square containing $p$ rows and $p$ columns. Each of the resulting $p^2$ cells contains one of the treatments.
 
-For example, in a $p$=5 LSD let the letters A, B, C, D, E represent the levels of the treatment.  Then the design created is:
+For example, in a [$p$=5]{.underline} LSD let the letters A, B, C, D, E represent the levels of the treatment. Then the design created is:
 
-![](Capture2.JPG)
+![](images/Screenshot 2024-03-19 140439.png)
 
 The columns represent one blocking factor and the row represent another blocking factor.
 
-In the toothpaste example above we have a $p$=4 LSD.  Let's make that design by hand.
+In the toothpaste example above we have a $p$=4 LSD. Let's make that design by hand.
 
 Let's make the design using the `agricoale` package and the `design.lsd` function.
 
@@ -278,21 +284,19 @@ lsd
 
 ```
 
-
 ### Analysis of a LSD
 
 The statistical model for a LSD is:
 
-$$Y_{ij}=\mu+r_i+c_j+\tau_k+\epsilon_{ijk}$$ 
+$$Y_{ij}=\mu+r_i+c_j+\tau_k+\epsilon_{ijk}$$
 
-Where now the $r_i$ and $c_j$ are the row and the column blocking factors.  All of $i$, $j$ and $k$ range from $1...p$ where p is the number of treatments.
+Where now the $r_i$ and $c_j$ are the row and the column blocking factors. All of $i$, $j$ and $k$ range from $1...p$ where p is the number of treatments.
 
-Note: This model is __additive__ meaning there is __no interaction between rows, columns and treatments__.
+Note: This model is **additive** meaning there is **no interaction between rows, columns and treatments**.
 
 The ANOVA now consists of:
 
-$$ss\text{Total}=ss\text{T}+ ss\text{Rows}+ss\text{Columns}+ ssE$$
-where the total df is $p^2-1$ and the error df is $(p-2)(p-1)$ and each the treatments, rows and columns have $(p-1)$ df.
+$$ss\text{Total}=ss\text{T}+ ss\text{Rows}+ss\text{Columns}+ ssE$$ where the total df is $p^2-1$ and the error df is $(p-2)(p-1)$ and each the treatments, rows and columns have $(p-1)$ df.
 
 Again, we will only be concerned with the p-value of the treatments, since those are the only things we actually randomly assigned.
 
@@ -307,7 +311,6 @@ lsd$sales<-round(lsd$sales, 2)
 lsd
 
 ```
-
 
 ```{r}
 
@@ -326,6 +329,8 @@ mod<-aov(sales~row+col+display, data=lsd)
 summary(mod)
 ```
 
+-   Only care about the p-value of the display (the treatment)
+
 And a Tukey HSD
 
 ```{r}
@@ -343,7 +348,6 @@ plot(tukey)
 
 ```
 
-
 Check the assumptions, just by the treatment factor.
 
 ```{r}
@@ -357,25 +361,25 @@ abline(h = 0, lty = 2)
 
 ```
 
+-   Residuals look ok - small sample size
+
 ## Replications
 
+**Replication:** A full repeat of a treatment combination in an experiment.
 
-__Replication:__ A full repeat of a treatment combination in an experiment.
+In our A/B testing and A/B/n testing notes every example experiment had replication. Meaning the treatments were applied to more than one person.
 
-In our A/B testing and A/B/n testing notes every example experiment had replication.  Meaning the treatments were applied to more than one person.  
+And for obvious reasons, it makes sense to replicate A/B tests. We already know that the larger the sample size you have, the more power you have and that is mostly because the denominator of the tests (the error estimate) decreases with an increased sample size (remember this sentence).
 
-And for obvious reasons, it makes sense to replicate A/B tests.  We already know that the larger the sample size you have, the more power you have and that is mostly because the denominator of the tests (the error estimate) decreases with an increased sample size (remember this sentence).
+Notice that the two examples we looked at in these notes are small experiments.
 
-Notice that the two examples we looked at in these notes are small experiments. 
+The degrees of freedom for error for both of these experiments was small, 15 and 6 accordingly. Much smaller than the larger experiments were were dealing with in the previous notes.
 
-
-The degrees of freedom for error for both of these experiments was small, 15 and 6 accordingly.  Much smaller than the larger experiments were were dealing with in the previous notes. 
-
-Because of this, there might be a desire to run another __replicate__ of the smaller experiments to get better estimates of the error and treatments.
+Because of this, there might be a desire to run another **replicate** of the smaller experiments to get better estimates of the error and treatments.
 
 For the script experiment, adding replication would mean adding more agents into the experiment.
 
-For the toothpaste display experiment you could run it over more weeks with more stores, if you have more stores!  If not then you can repeat the entire experiment again.  Replicate it.
+For the toothpaste display experiment you could run it over more weeks with more stores, if you have more stores! If not then you can repeat the entire experiment again. Replicate it.
 
 ### Example
 
@@ -383,35 +387,33 @@ An auto company wonders which of its three models of car 1, 2, or 3, gets better
 
 What is the response?
 
-*
+-   total number of miles traveled
 
-what is the treatment?
+What is the treatment?
 
-*
+-   model of car
 
 Are there blocking variables? If so, which one/ones?
 
-*
+-   Yes, fuel type and speed of the car
 
 The data is contained in the "CarData.csv" file.
 
 ```{R}
 
-df<-read.csv("I:\\Classes\\ISA 633\\4. Blocking\\blocking continuous\\CarData.csv")
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/CarData.csv")
 df
 ```
 
-
 what type of design is this?
 
-*
+-   Latin Squares Design
 
-Is this design replicated?  Why or why not?
+Is this design replicated? Why or why not?
 
-*
+-   Yes
 
-
-For fun, let's see what happens if we just analyze a single replicate (we would never do this in the real world).
+For fun, let's see what happens if we just analyze a single replicate (we would never do this in the real world). INCORRECT ANALYSIS - DO NOT USE
 
 ```{R}
 mod<-aov(distance1~speed+fuel+car, data=df)
@@ -419,7 +421,7 @@ summary(mod)
 
 ```
 
-Now let's analyze this with both replicates, assuming all 18 treatment combinations were completely randomized and run in a single long experiment.  
+Now let's analyze this with both replicates, assuming **all 18 treatment combinations were completely randomized and run in a single long experiment.**
 
 First we have to manipulate the data to make it long.
 
@@ -436,9 +438,11 @@ summary(mod)
 
 ```
 
-OK, so what if the experiments ran one replicate on one track and another replicate on another track?  Or one replicate one day and another replicate a day next week?  we would need to account for the potential variation between replicates.  We can do that by adding another blocking factor.
+-   The mean sq number of the residuals is the denominator of the F-test?
 
-Unless the 18 runs above were randomized and run all together, below is how the experiment should be analyzed.  
+OK, so what if the experiments [ran one replicate on one track and another replicate on another track]{.underline}? Or one replicate one day and another replicate a day next week? We would need to account for the potential variation between replicates. We can do that by adding another blocking factor.
+
+Unless the 18 runs above were randomized and run all together, below is how the experiment should be analyzed.
 
 ```{r}
 mod<-aov(distance~speed+fuel+car+replicate, data=df_long)
@@ -446,29 +450,27 @@ summary(mod)
 
 ```
 
-Failing to account for the correct restrictions on randomization could be detrimental to conclusions, and maybe cost your company a lot of money.  Don't do it!
+Failing to account for the correct restrictions on randomization could be detrimental to conclusions, and maybe cost your company a lot of money. Don't do it!
 
 ## More than one Replicate Per Block
 
 In the script experiment above each agent read each script a single time. In a randomized complete block design there is exactly one replicate per block.
 
-But what if your experiment allows to get more than one replicate per block?  Like in a test where your blocks are marketing areas and you are running the same web experiment in each marketing area.  You aren't going to just show one person version A and another person version B in each marketing area and call it a day!  You will run many replicates of each version in each marketing area. 
+But what if your experiment allows to get more than one replicate per block? Like in a test where your blocks are marketing areas and you are running the same web experiment in each marketing area. You aren't going to just show one person version A and another person version B in each marketing area and call it a day! You will run many replicates of each version in each marketing area.
 
-If that is the case the design is called a __generalized complete block design__. And the analysis changes because we want to make sure that we are always testing against the correct error term.
+If that is the case the design is called a **generalized complete block design**. And the analysis changes because we want to make sure that we are always testing against the correct error term.
 
 ### Golf Example
 
-Consider an experiment from Golf Magazine.  An experiment was conducted to determine the ideal tee height for driving a golf ball as far as possible.  The purpose was to recommend to all readers of the article what tee height they should use.  The treatment factor was the tee height. An experimental run consisted of a golfer hitting a golf ball from a specified height and the response was the distance the ball traveled.  Because the magazine wanted to make a general conclusion, a representative group of golfers was used rather than one golfer.  Since the ability to drive the ball by the golfers used in the study differed, it made sense to group or block the trials by golfer and randomize the order that each golfer hit a ball from each of the tee heights. 
+Consider an experiment from Golf Magazine. An experiment was conducted to determine the ideal tee height for driving a golf ball as far as possible. The purpose was to recommend to all readers of the article what tee height they should use. The treatment factor was the tee height. An experimental run consisted of a golfer hitting a golf ball from a specified height and the response was the distance the ball traveled. Because the magazine wanted to make a general conclusion, a representative group of golfers was used rather than one golfer. Since the ability to drive the ball by the golfers used in the study differed, it made sense to group or block the trials by golfer and randomize the order that each golfer hit a ball from each of the tee heights.
 
 But since hitting more than three golf balls would probably not fatigue a golfer and cause more variability in the driving distance there was no need to restrict a golfer to hitting just three balls (that would be the RCB, one replicate per golfer).
 
-Instead each golfer hit 5 golf balls from each of 3 tee heights.  Nine golfers were used in this part of the study. The data is contained in the golf.csv file.
-
+Instead each golfer hit 5 golf balls from each of 3 tee heights. Nine golfers were used in this part of the study. The data is contained in the golf.csv file.
 
 How many rows will be in this data if it is long?
 
-* 
-
+-   
 
 Make the appropriate variables factors.
 
@@ -478,7 +480,6 @@ head(df)
 df$Tee.Hgt<-as.factor(df$Tee.Hgt)
 df$Golfer.ID<-as.factor(df$Golfer.ID)
 ```
-
 
 Let's summarize this data.
 
@@ -514,39 +515,29 @@ df %>% ggplot(aes(x=Golfer.ID, y=Distance, group=interaction(Tee.Hgt, Golfer.ID)
         
 ```
 
-
-
-
-
-The model for this experiment is a little different.  Because now there are _replicate experimental units_ in each block it is possible find the block by treatment interaction. 
-
+The model for this experiment is a little different. Because now there are *replicate experimental units* in each block it is possible find the block by treatment interaction.
 
 $$Y_{ij}=\mu+b_i+\tau_j+b\tau_{ij}+\epsilon_{ij}$$
 
-
-
-
-But let's think about what we would like to conclude from this study.  We want to know which tee height is good for all golfers, not just for an individual golfer.
+But let's think about what we would like to conclude from this study. We want to know which tee height is good for all golfers, not just for an individual golfer.
 
 If the golfer by tee height interaction were significant in this model what would that imply?
 
-*
+-   
 
+Recall the $MSE$ estimates the variation of the response around the treatment mean.
 
-Recall the $MSE$ estimates the variation of the response around the treatment mean. 
+Given that definition above, what does the error term in the model represent? In other words when we use the traditional $MSE$ what are we testing?
 
-Given that definition above, what does the error term in the model represent?  In other words when we use the traditional $MSE$ what are we testing?
-
-*
+-   
 
 So if use the "regular error term" we will not be able to generalize our conclusions to all golfers (from our random sample of golfers).
 
+To generalize to all golfers we would have to ensure that the **treatment factor was significant across the various golfers**. In other words we need a different yardstick for comparison.
 
-To generalize to all golfers we would have to ensure that the __treatment factor was significant across the various golfers__.  In other words we need a different yardstick for comparison.
+-   
 
-*
-
-That yardstick is going to be $MSE$ for the block by treatment interaction.  
+That yardstick is going to be $MSE$ for the block by treatment interaction.
 
 This is how we could get R to test what we want.
 
@@ -555,8 +546,7 @@ mod <- aov(Distance ~ Tee.Hgt + Error(Golfer.ID/Tee.Hgt), data = df)
 summary(mod)
 ```
 
-
-Here is the __incorrect way__!!! 
+Here is the **incorrect way**!!!
 
 ```{R}
 mod<-aov(Distance~Tee.Hgt*Golfer.ID, data=df)
@@ -566,13 +556,13 @@ summary(mod)
 
 Let's understand the degrees of freedom for these analyses.
 
-* There are three tee heights so df=2.
+-   There are three tee heights so df=2.
 
-* There are nine golfers so df=8.
+-   There are nine golfers so df=8.
 
-* The golfer by tee height interaction is 2*8=16.
+-   The golfer by tee height interaction is 2\*8=16.
 
-* The residuals are 134-16-8-2=108.
+-   The residuals are 134-16-8-2=108.
 
 In the first, correct ANOVA above we see that Residuals df=16 which is the df for the interaction, which is what we want to test against.
 
@@ -580,14 +570,11 @@ And of course you would follow by checking assumptions.
 
 ## Python Code
 
-You can access the code [here](https://gist.github.com/weeseml/13fcfac35a36aa632d8f7c000b6d86cb).  Note I was not able to produce the correct analysis for the Generalized Complete Block design in Python. If you are able to, please share otherwise you will have to use R.
-
+You can access the code [here](https://gist.github.com/weeseml/13fcfac35a36aa632d8f7c000b6d86cb). Note I was not able to produce the correct analysis for the Generalized Complete Block design in Python. If you are able to, please share otherwise you will have to use R.
 
 ```{r}
 library(reticulate)
 ```
-
-
 
 ```{python}
 import pandas as pd
@@ -671,7 +658,6 @@ axs[1, 1].hlines(0, xmin=-0.5, xmax=1.5, colors='red', linestyles='dashed')
 plt.tight_layout()
 plt.show()
 ```
-
 
 There is no equivavlent to `agricole` in python so I'm only showing the "by hand" method.
 
@@ -763,9 +749,7 @@ print(lsd)
 
 ```
 
-
 I was lazy and decided to generate the response that I did above, I just needed to re-make the design with numeric factors.
-
 
 ```{python}
  #Set the seed for reproducibility
@@ -823,7 +807,6 @@ print(lsd_long)
 
 ```
 
-
 ```{python}
 
 
@@ -872,7 +855,6 @@ tukey_result.plot_simultaneous()
 plt.show()
 ```
 
-
 ```{python}
 
 import pandas as pd
@@ -919,7 +901,7 @@ print(plot)
 
 ```
 
-Here is as best we can do in python.  This model is not exactly what we want, but it is close. Here is the link: https://www.statsmodels.org/stable/mixed_linear.html 
+Here is as best we can do in python. This model is not exactly what we want, but it is close. Here is the link: <https://www.statsmodels.org/stable/mixed_linear.html>
 
 ```{python}
 import pandas as pd
