@@ -118,12 +118,12 @@ dunnett<-glht(mod1, linfct=mcp(treatment="Dunnett"), alternative="two.sided")
 summary(dunnett)
 plot(dunnett)
 ```
+
 ## Comparing one-sided tests vs two-sided
 
-The one-sided test has a smaller p-value, while the two-sided test is a more stringent test. By having a higher p-value for the two-sided test you need more evidence to reject the null hypothesis. 
+The one-sided test has a smaller p-value, while the two-sided test is a more stringent test. By having a higher p-value for the two-sided test you need more evidence to reject the null hypothesis.
 
-
-## Comparing all treatmetns after logistic
+## Comparing all treatments after logistic
 
 We use the same thing!
 
@@ -146,6 +146,7 @@ mod<-glm(clicks~treatment, data=df_long, family="binomial")
 anova(mod, test="Chisq")
 
 ```
+
 Now this case, since this analysis is telling us that the treatment is not making a difference (not significant chi-squared value) we WOULD NOT PEROFRM THE FOLLOWING TEST.
 
 But here is the code for the mechanics of it.
