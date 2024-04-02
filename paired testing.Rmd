@@ -19,31 +19,31 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ## Topics Covered
 
-1. _Within-subject_ testing vs. _Between-subject_ testing.
+1.  *Within-subject* testing vs. *Between-subject* testing.
 
-2. Know when paired testing is more appropriate.
+2.  Know when paired testing is more appropriate.
 
-3. Understand why the standard error is less for paired testing.
+3.  Understand why the standard error is less for paired testing.
 
-4. Know how to calculate power from a paired test.
+4.  Know how to calculate power from a paired test.
 
 ## Scenario
 
-The Acme company has created a typing program that it believes will increase typing speed.  In order to generate evidence as to the efficacy of the program, 20 employees who type regularly as part of their jobs are to take a training program that will help them type faster.  To determine whether the program really works, the employees are first given a standard typing test to measure their typing speed, the "before" test.  Then they go through the training course, followed by another test of typing speed, "after" test.  
+The Acme company has created a typing program that it believes will increase typing speed. In order to generate evidence as to the efficacy of the program, 20 employees who type regularly as part of their jobs are to take a training program that will help them type faster. To determine whether the program really works, the employees are first given a standard typing test to measure their typing speed, the "before" test. Then they go through the training course, followed by another test of typing speed, "after" test.
 
-This is an example of _within subjects design_ where we measure the effect of both conditions ("before" and "after" training) for each subject.
+This is an example of *within subjects design* where we measure the effect of **both conditions ("before" and "after" training) for each subject**.
 
 What is the response?
 
-*
+-   typing speed
 
 What is the treatment?
 
-*
+-   which typing program used
 
 ```{r}
 
-df<-read.csv("I:\\Classes\\ISA 633\\5. Matching\\paired testing\\typing.csv")
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/typing.csv")
 ```
 
 ```{R}
@@ -78,15 +78,15 @@ And we would conclude the training had no effect on the typing speed.
 
 But is that conclusion valid?
 
-*
+-   We always assume that the treatment groups are independent
 
 Why?
 
-* 
+-   This is not the case here as people were in the control and the treatment
 
 ## Matched Pairs
 
-In this case there is a positive correlation between the before and after variables.  This violates the assumption of _independence_ of the two samples.  
+In this case there is a positive correlation between the before and after variables. This violates the assumption of *independence* of the two samples.
 
 This graph clearly shows an improvement in typing speed.
 
@@ -101,12 +101,15 @@ df_long %>% ggplot(aes(x=test, y=score, group=employee))+
 
 ```
 
-Recall the confidence interval for the difference between two samples is 
+Recall the confidence interval for the difference between two samples is
 
 $$d \pm t_{(1-\alpha/2,n-1)}\frac{s_d}{\sqrt{n}} $$
+
+-   The top of the fraction is the standard deviation for the difference
+
 What is the quantity $\frac{s_d}{\sqrt{n}}$ ?
 
-*
+-   The standard error of the difference
 
 To obtain a test for the matched pairs data we use
 
@@ -116,56 +119,55 @@ t.test(score~test, data=df_long, paired=TRUE)
 
 ```
 
-First we notice our conclusions changed.  But let's compare the confidence interval from the independent test with this paired test.
-The independent t-test 95\% CI for the difference is (-2.08, 12.08) and the paired interval is (-6.62, -3.38) which is much narrower.
+First we notice our conclusions changed. But let's compare the confidence interval from the independent test with this paired test. The independent t-test 95% CI for the difference is (-2.08, 12.08) and the paired interval is (-6.62, -3.38) which is much narrower.
 
 What would make a confidence interval with the same difference, same confidence level, same $n$ narrower?
 
-*
+-   Standard deviation of the difference
 
-The values  are 3.49 and 0.77 for the independent and the paired test.  That is huge reduction in variance!  But notice, the "signal" or the difference between the two means is 5 regardless.  
+The values are 3.49 and 0.77 for the independent and the paired test. That is huge reduction in variance! But notice, the "signal" or the difference between the two means is 5 regardless.
 
-In other words, with the same "signal" and a reduced standard error we were able to detect an effect in the paired test.  
+In other words, **with the same "signal" and a reduced standard error we were able to detect an effect in the paired test.**
 
-Another way to look at the better performance of the paired test is to recognize that the independent samples method assumes that there is no relationships between the before and after test scores and so overestimates the variance.
+Another way to look at the better performance of the paired test is to recognize that the independent samples method assumes that there is **no relationships between the before and after test scores and so overestimates the variance.**
 
-The matched pair method takes account of the dependence and correctly estimates the variance.  
+The matched pair method takes account of the dependence and correctly estimates the variance.
 
 Recall
 
 $$var(X+Y)=var(X)+var(Y)+2\times cov(X,Y) $$
 
-$$var(X-Y)=var(X)+var(Y)-2\times cov(X,Y)  $$
-where $cov(X,Y)=E[(X-\mu_x)(Y-\mu_x)]$.  
+$$var(X-Y)=var(X)+var(Y)-2\times cov(X,Y)  $$ where $cov(X,Y)=E[(X-\mu_x)(Y-\mu_x)]$.
 
-A positive covariance  implies that if X is above its mean then Y is usually above its mean too and if X is below its mean, then Y is usually below its mean too. The "before" and "after" scores here have a positive covariance.
+A positive covariance implies that if X is above its mean then Y is usually above its mean too and if X is below its mean, then Y is usually below its mean too. The "before" and "after" scores here have a positive covariance.
 
-Under the assumption of Independence 
+Under the assumption of Independence
 
 $$var(X-Y)=var(X)+var(Y)$$
-which is larger than 
 
-$$var(X-Y)=var(X)+var(Y)-2\times cov(X,Y)$$.
+-   regular t-test
+
+which is larger than
+
+$$var(X-Y)=var(X)+var(Y)-2\times cov(X,Y)$$
 
 ## Experiment Design
 
 This test design has two potential problems:
 
-*
+-   
 
+-   
 
-* 
+We could have chose to perform a *between-subjects design*. How might that work?
 
+-   
 
-We could have chose to perform a _between-subjects design_.  How might that work?
+-   
 
-*
+What would be the downside of a *between-subjects design* here?
 
-*
-
-What would be the downside of a _between-subjects design_ here?
-
-* 
+-   
 
 ## Power of a Paired Test
 
@@ -177,14 +179,12 @@ power.t.test(delta=5, sd=11, power=0.8, sig.level = 0.05, type="paired")
 
 ```
 
-
 ## Python Code
 
 ```{r}
 library(reticulate)
 
 ```
-
 
 ```{python}
 
@@ -198,7 +198,6 @@ df = pd.read_csv("I:\\Classes\\ISA 633\\5. Matching\\paired testing\\typing.csv"
 df_long = pd.melt(df, id_vars=['employee'], value_vars=['before', 'after'], var_name='test', value_name='score')
 ```
 
-
 ```{python}
 from plotnine import ggplot, aes, geom_boxplot, theme, theme_bw
 
@@ -208,7 +207,6 @@ print(plot)
 
 
 ```
-
 
 ```{python}
 
@@ -226,7 +224,6 @@ print("p-value:", p_val)
 
 
 ```
-
 
 ```{python}
 
