@@ -17,27 +17,27 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE)
 ```
 
-*Shallow men believe in luck. Strong men believe in cause and effect* 
+*Shallow men believe in luck. Strong men believe in cause and effect*
 
 *--Ralph Waldo Emerson*
 
-In this sent of notes we will go over theory and define measures we will be examining for the rest of the semester.  
+In this sent of notes we will go over theory and define measures we will be examining for the rest of the semester.
 
 ## Topics Covered
 
-1. Understand the concept of a counterfactual.
+1.  Understand the concept of a counterfactual.
 
-2. Understand the basic identity of causality.
+2.  Understand the basic identity of causality.
 
-3. Understand how selection bias affects the estimate of the causal effect.
+3.  Understand how selection bias affects the estimate of the causal effect.
 
-4. Understand how randomization helps selection bias.
+4.  Understand how randomization helps selection bias.
 
-5. Understand the mathematical operation of expectation.
+5.  Understand the mathematical operation of expectation.
 
-6. Be able to define ATT, ATE and ATU.
+6.  Be able to define ATT, ATE and ATU.
 
-7. Understand the problem with heterogeneous treatment effects.
+7.  Understand the problem with heterogeneous treatment effects.
 
 ## Causal Inference
 
@@ -51,12 +51,9 @@ To establish causality, we need to know this as well as **What happens to units 
 
 In the potential outcomes tradition, a causal effect is defined as a comparison between two states of the world.
 
-Example: In the first state of the world (maybe the actual state of the world) a man takes aspirin for his headache and one hour later reports the severity of his headache.  What was the causal effect of the aspirin? According to the potential outcomes tradition, the causal effect of the aspirin is the difference in the severity of his headache between two states of the word: one where he took the aspirin (actual state of the world) and one where he never took the aspirin (counterfactual state of the world). The difference in headache severity between these two states of the world, measured at what is otherwise the same point in time, is the causal effect of aspirin on his headache. 
+Example: In the first state of the world (maybe the actual state of the world) a man takes aspirin for his headache and one hour later reports the severity of his headache. What was the causal effect of the aspirin? According to the potential outcomes tradition, the causal effect of the aspirin is the difference in the severity of his headache between two states of the word: one where he took the aspirin (actual state of the world) and one where he never took the aspirin (counterfactual state of the world). The difference in headache severity between these two states of the world, measured at what is otherwise the same point in time, is the causal effect of aspirin on his headache.
 
 The potential outcomes notation expresses causality in terms of counterfactuals.
-
-
-
 
 The basic identity of causal inference is:
 
@@ -64,126 +61,114 @@ $$\text{Outcome for treated}-\text{Outcome for untreated}=$$
 
 $$[\text{Outcome for treated}-\text{Outcome for treated if not treated}] + $$
 
-$$[\text{Outcome for treated if not treated}]-[\text{Outcome for untreated}] $$
-which we can think of as:
+$$[\text{Outcome for treated if not treated}]-[\text{Outcome for untreated}] $$ which we can think of as:
 
 $$\text{Outcome for treated}-\text{Outcome for untreated}=$$
 
-$$\text{Impact of treatment on treated} + \text{Selection bias} $$
-The goal is to be able to remove the selection bias from this equation
+$$\text{Impact of treatment on treated} + \text{Selection bias} $$ The goal is to be able to remove the selection bias from this equation
 
 By *selection bias* we mean the difference in the groups prior to receiving any treatment.
 
-Because a designed experiment uses randomization the $\text{Selection bias}$ term has an expected value of 0, since randomization basically guarantees the groups will have all of the same underlying biases.  In observational data, this is not the case.  
-
-
+Because a designed experiment uses randomization the $\text{Selection bias}$ term has an expected value of 0, since randomization basically guarantees the groups will have all of the same underlying biases. In observational data, this is not the case.
 
 ## Randomization
 
 Randomization in experimental design is the key concept.
 
-An experiment is randomized if the method for assigning treatments to units involves a _known, well-understood probabilistic scheme_.
+An experiment is randomized if the method for assigning treatments to units involves a *known, well-understood probabilistic scheme*.
 
 At some point every observation has an equally likely chance of being selected
 
-Experimental unit ==> the 'thing' receiving the treatment (often a person)
+Experimental unit ==\> the 'thing' receiving the treatment (often a person)
 
-Treatment ==> the 'knob' that you change
+Treatment ==\> the 'knob' that you change
 
 ### Haphazard is not randomized
 
-Let's say we have 4 treatments that need to be assigned to 16 units.  Let's think about the following schemes:
+Let's say we have 4 treatments that need to be assigned to 16 units. Let's think about the following schemes:
 
-1. We use sixteen identical slips of paper, four marked with A, four with B, and so on to D. We put the slips of paper into a basket and mix them thoroughly. For each unit, we draw a slip of paper from the basket and use the treatment marked on the slip. **This is random**
+1.  We use sixteen identical slips of paper, four marked with A, four with B, and so on to D. We put the slips of paper into a basket and mix them thoroughly. For each unit, we draw a slip of paper from the basket and use the treatment marked on the slip. **This is random**
 
-2. Treatment A is assigned to the first four units we happen to encounter, treatment B to the next four units, and so on. **Not random since the assignment to treatment is dependent on order**
+2.  Treatment A is assigned to the first four units we happen to encounter, treatment B to the next four units, and so on. **Not random since the assignment to treatment is dependent on order**
 
-3. As each unit is encountered, we assign treatments A, B, C, and D based on whether the “seconds” reading on the clock is between 1 and 15, 16 and 30, 31 and 45, or 46 and 60. **Not random since your treatment is assigned based on time**
+3.  As each unit is encountered, we assign treatments A, B, C, and D based on whether the "seconds" reading on the clock is between 1 and 15, 16 and 30, 31 and 45, or 46 and 60. **Not random since your treatment is assigned based on time**
 
 Randomization protects against selection bias and confounding
 
-Confounding ==> when a treatment and another variable cannot be distinguished from one another
+Confounding ==\> when a treatment and another variable cannot be distinguished from one another
 
 ### Randomization against confounding
 
 Let's say we have two potential COVID treatments, hydroxychloroquine and no treatment (control). We have 100 people who have volunteered to be assigned to the two treatments. We will conduct this experiment for 6 months.
 
-Let's think about things that can wrong if we fail to randomize. It might be tempting to assign the less sick patients to the no treatment group since we have a hope that the hydroxychloroquine can work.  Why is this wrong?
+Let's think about things that can wrong if we fail to randomize. It might be tempting to assign the less sick patients to the no treatment group since we have a hope that the hydroxychloroquine can work. Why is this wrong?
 
-* Confounding the baseline illness with the treatment
+-   Confounding the baseline illness with the treatment
 
 Although hydroxychloroquine was widely available when we started, we now only have a limited supply, perhaps we should give people the full dose initially and then as we run out, reduce the dose. What is the problem here?
 
-* Treatment is not consistent so you cannot know if dosage has an effect
+-   Treatment is not consistent so you cannot know if dosage has an effect
 
 Knowing that the patients could differ in age, socioeconomic status and other factors how would you randomize this trial?
 
-* 
+-   
 
 ### How does randomization help?
 
-First we should remember the phrase from ISA 125 **"A random sample is a representative sample"**.  
+First we should remember the phrase from ISA 125 **"A random sample is a representative sample"**.
 
 And of course we could make an experimental design that would include considerations for age, gender, health status, etc.
 
-**_The beauty of randomization is that it helps prevent confounding, even for factors that we do not know are important_.**
-
+***The beauty of randomization is that it helps prevent confounding, even for factors that we do not know are important*****.**
 
 ## Potential outcomes model
 
+The state of the world where no treatment occurred is the *control* state.
 
-The state of the world where no treatment occurred is the _control_ state.  
-
-Each unit $i$ has exactly two potential outcomes: 
+Each unit $i$ has exactly two potential outcomes:
 
 Ys can be the same or these can be different
 
-1. $Y^1$: a potential outcome where the treatment occurred.
-2. $Y^0$: a potential outcome where the treatment did not occur.
+1.  $Y^1$: a potential outcome where the treatment occurred.
+2.  $Y^0$: a potential outcome where the treatment did not occur.
 
 Here $Y$ is the actual outcome.
 
-Assume you are interested in $Y$.  
+Assume you are interested in $Y$.
 
-Let's assume that $Y$ has two potential outcomes like make a purchase Yes=1 or No=0.  We would indicate that as $Y^1$ or $Y^0$. But it can't be both.
+Let's assume that $Y$ has two potential outcomes like make a purchase Yes=1 or No=0. We would indicate that as $Y^1$ or $Y^0$. But it can't be both.
 
 And assume that you have an indicator variable $D$ and if belong to treatment group $D=1$ those who are not in that group $D=0$.
 
-So for a particular observation, $i$ you can observe $Y_i^1|D_i=1$ and $Y_i^0|D_i=0$. 
+So for a particular observation, $i$ you can observe $Y_i^1|D_i=1$ and $Y_i^0|D_i=0$.
 
-And you can also observe $Y_i^0|D_i=1$ and $Y_i^1|D_i=0$. 
+And you can also observe $Y_i^0|D_i=1$ and $Y_i^1|D_i=0$.
 
 And if we wanted to calculate the average treatment effect of $D$ we would:
 
-$$Avg_n[Y_i^1|D_i=1]-Avg_n[Y_i^0|D_i=0] $$
-where $Avg_n[Y_i^1|D_i=1]=\frac{1}{n_1}\sum_i^{n_{1}}Y_i$ for $n_1$ people in the $D=1$ group.
+$$Avg_n[Y_i^1|D_i=1]-Avg_n[Y_i^0|D_i=0] $$ where $Avg_n[Y_i^1|D_i=1]=\frac{1}{n_1}\sum_i^{n_{1}}Y_i$ for $n_1$ people in the $D=1$ group.
 
 #### Expectation
 
 Let's introduce some different notation for this operation. First, can we all agree that an average is a weighted sum?
 
-Definition: The _expected value_ of a random variable is simply the weighted sum of all possible values that the variable can take with the weights given by the probability of each value occurring in the population. 
+Definition: The *expected value* of a random variable is simply the weighted sum of all possible values that the variable can take with the weights given by the probability of each value occurring in the population.
 
 Suppose the variable $X$ can take on values $x_1, x_2,...,x_k$ each with probability $f(x_1), f(x_2),...,f(x_k)$ respectively. Then we can define expected value of $X$ as
 
-$$ E(X)=x_1f(x_1)+x_2f(x_2)+...+x_kf(x_k)=\sum_{j=1}^kx_if(x_i)$$
-Using this we can re-write the above expression for the average treatment effect of $D$ as
+$$ E(X)=x_1f(x_1)+x_2f(x_2)+...+x_kf(x_k)=\sum_{j=1}^kx_if(x_i)$$ Using this we can re-write the above expression for the average treatment effect of $D$ as
 
-$$E[Y_i^1|D_i=1]-E[Y_i^0|D_i=0]$$
-And we will use the expectation notation from here forward. 
+$$E[Y_i^1|D_i=1]-E[Y_i^0|D_i=0]$$ And we will use the expectation notation from here forward.
 
-One more thing. What is the average of a constant value, $c$?  
+One more thing. What is the average of a constant value, $c$?
 
-* E[c] = c
-c is a constant
-The expected value of 8 is 8
-
+-   E[c] = c c is a constant The expected value of 8 is 8
 
 #### Back to Example
 
 What we are after is $E[Y_i^1-Y_i^0]$ which is the average causal effect involving everyone's $Y_i^1$ and everyone's $Y_i^0$ but we only observe $Y_i^1$ for those who were treated and we only observe $Y_i^0$ for those who were not.
 
-Let's assume that we can say that $Y_i^1-Y_i^0=\delta$ and that $\delta$ is a constant causal effect it is both individual and the average causal effect.  So $Y_i^1=\delta+Y_i^0$.
+Let's assume that we can say that $Y_i^1-Y_i^0=\delta$ and that $\delta$ is a constant causal effect it is both individual and the average causal effect. So $Y_i^1=\delta+Y_i^0$.
 
 And substituting into the equation above:
 
@@ -191,36 +176,29 @@ $$E[Y_i^1|D_i=1]-E[Y_i^0|D_i=0]=E[\delta+Y_i^0|D_i=1]-E[Y_i^0|D_i=0]$$
 
 And that reduces to (baseline):
 
-$$=\delta+E[Y_i^0|D_i=1]-E[Y_i^0|D_i=0].$$
- What if $D$ is randomly assigned?
- 
- In this case then $E[Y_i^0|D_i=1]=E[Y_i^0|D_i=0]$ and the groups are the same.  And then:
- 
- $$E[Y_i^1|D_i=1]-E[Y_i^0|D_i=0]=\delta,$$
-and that is why a randomized controlled experiment will show a causal effect!
- 
+$$=\delta+E[Y_i^0|D_i=1]-E[Y_i^0|D_i=0].$$ What if $D$ is randomly assigned?
 
-When it is not possible to randomize (we will cover this later in the semester) or experiment (you can't make people switch from Apple to Samsung to study app usage) then there are alternative statistical methods to use to control for the selection bias or the confounding in the sample.  Just hold that thought for now.
+In this case then $E[Y_i^0|D_i=1]=E[Y_i^0|D_i=0]$ and the groups are the same. And then:
 
+$$E[Y_i^1|D_i=1]-E[Y_i^0|D_i=0]=\delta,$$ and that is why a randomized controlled experiment will show a causal effect!
+
+When it is not possible to randomize (we will cover this later in the semester) or experiment (you can't make people switch from Apple to Samsung to study app usage) then there are alternative statistical methods to use to control for the selection bias or the confounding in the sample. Just hold that thought for now.
 
 ## Average treatment effects
 
 We define the unit specific treatment effect or causal effect as
 
-$$\delta_i=Y_i^1-Y_i^0$$
-From this simple definition of a treatment effect we derive $ATE$, $ATT$ and $ATU$.
+$$\delta_i=Y_i^1-Y_i^0$$ From this simple definition of a treatment effect we derive $ATE$, $ATT$ and $ATU$.
 
-1. $ATE$: Average Treatment Effect
+1.  $ATE$: Average Treatment Effect
 
-$$ATE=E[\delta_i]=E[Y_i^1-Y_i^0]=E[Y_i^1]-E[Y_i^0]$$
-The ATE requires both potential outcomes for each $i$ unit.  
+$$ATE=E[\delta_i]=E[Y_i^1-Y_i^0]=E[Y_i^1]-E[Y_i^0]$$ The ATE requires both potential outcomes for each $i$ unit.
 
-2. $ATT$: Average treatment effect for the treatment group.  
+2.  $ATT$: Average treatment effect for the treatment group.
 
 $ATT$ will likely differ from the ATE because individuals will be sorting into some treatment based on the gains they expect from it.
 
-$$ATT=E[\delta_i|D_i=1]=E[Y_i^1-Y_i^0|D_i=1]=E[Y_i^1|D_i=1]-E[Y_i^0|D_i=1]$$
-3. ATU: Average treatment effect for the untreated group (control group).
+$$ATT=E[\delta_i|D_i=1]=E[Y_i^1-Y_i^0|D_i=1]=E[Y_i^1|D_i=1]-E[Y_i^0|D_i=1]$$ 3. ATU: Average treatment effect for the untreated group (control group).
 
 Like $ATT$ people will sort themselves into the control.
 
@@ -230,22 +208,19 @@ The most common measures sought after are $ATE$ and $ATT$.
 
 ## Difference in means decomposition
 
-Ok, so we understand that the $ATE$ estimate is biased by selection. But there is another component of bias as well, heterogeneity of treatment effects. 
+Ok, so we understand that the $ATE$ estimate is biased by selection. But there is another component of bias as well, heterogeneity of treatment effects.
 
 Mathematically we can represent the $ATE$ as:
 
-$$E[Y^1|D=1]-E[Y^0|D=0]=ATE $$
-Selection bias:
+$$E[Y^1|D=1]-E[Y^0|D=0]=ATE $$ Selection bias:
 
-$$+ E[Y^0|D=1]=E[Y^0|D=0]$$
-Heterogeneity of treatment effects
+$$+ E[Y^0|D=1]=E[Y^0|D=0]$$ Heterogeneity of treatment effects
 
 $$+(1-\pi)(ATT-ATU)$$
 
 In real life when we have a sample of data, we estimate the $ATE$ as the difference in means between a treatment group and a control group in the sample data.
 
-
-Let's work through an example to see this decomposition.  Let's assume there are ten patients $i$ who have cancer, and two medical procedures or treatments.  There is a surgery intervention, **$D_i=1$**, and there is a chemotherapy intervention, **$D_i=0$**.  Each patient has the following two potential outcomes where a potential outcome is defined as a post-treatment life span in years: a potential outcome in a world where they received surgery and a potential outcome where the had instead received chemo. On the table below **$Y^1$=surgery** and **$Y^0$=chemo**.
+Let's work through an example to see this decomposition. Let's assume there are ten patients $i$ who have cancer, and two medical procedures or treatments. There is a surgery intervention, $D_i=1$, and there is a chemotherapy intervention, $D_i=0$. Each patient has the following two potential outcomes where a potential outcome is defined as a post-treatment life span in years: a potential outcome in a world where they received surgery and a potential outcome where the had instead received chemo. On the table below $Y^1$=surgery and $Y^0$=chemo.
 
 ```{R, echo=FALSE}
 
@@ -257,7 +232,6 @@ df<-data.frame(Patients, Y1, Y0, delta)
 
 ```
 
-
 ```{R, echo=FALSE}
 
 library(knitr)
@@ -266,8 +240,7 @@ knitr::kable(df, align="lccc") %>%
   kable_styling(full_width=F)
 ```
 
-We can calculate the $ATE$ as the mean difference between columns Y1 and Y0.  $E[Y^1]$=5.6 and $E[Y^0]$=5 and $ATE$=0.6.  
-
+We can calculate the $ATE$ as the mean difference between columns Y1 and Y0. $E[Y^1]$=5.6 and $E[Y^0]$=5 and $ATE$=0.6.
 
 ```{R}
 #Y1 mean
@@ -281,13 +254,11 @@ mean(c(1,6,1,8,2,1,10,6,7,8))
 
 ```
 
-But that is just the average. Notice not everyone benefits from surgery.  The ATE is simply the average over these __heterogeneous treatment effects__.
+But that is just the average. Notice not everyone benefits from surgery. The ATE is simply the average over these **heterogeneous treatment effects**.
 
+Since we are just making stuff up here, let's pretend that there is a doctor who knows each person's potential outcomes and chooses whichever treatment that maximizes a person's post-treatment life span. Once the doctor makes that treatment assignment, the doctor observes their post-treatment actual outcome according to the switching equation:
 
-Since we are just making stuff up here, let's pretend that there is a doctor who knows each person's potential outcomes and chooses whichever treatment that maximizes a person's post-treatment life span.  Once the doctor makes that treatment assignment, the doctor observes their post-treatment actual outcome according to the switching equation:
-
-$$Y_i=D_iY_i^1+(1-D_i)Y_i^0 $$
-where in this case $D_i=1$ is surgery and $D_i=0$ is chemo.
+$$Y_i=D_iY_i^1+(1-D_i)Y_i^0 $$ where in this case $D_i=1$ is surgery and $D_i=0$ is chemo.
 
 ```{R, echo=FALSE}
 Patients<-seq(1,10,1)
@@ -296,7 +267,6 @@ D<-c(1,0,1,0,1,1,0,0,0,1)
 df<-data.frame(Patients, Y, D)
 
 ```
-
 
 ```{R, echo=FALSE}
 
@@ -307,7 +277,7 @@ knitr::kable(df, align="lcc") %>%
   kable_styling(full_width=F)
 ```
 
-The first table shows only the __observed outcome__ for the treatment and control group.  The second table shows each unit's potential outcome.
+The first table shows only the **observed outcome** for the treatment and control group. The second table shows each unit's potential outcome.
 
 Since now we know $D$ we can calculate the $ATT$ and the $ATU$.
 
@@ -318,31 +288,26 @@ mean(c(6,4, 2,9,1))
 
 ```
 
-
 Here is thee $ATU$;
 
 ```{r}
 mean(c(-1,-1, -9, -1, -4))
 ```
 
-
 We can get the $ATE$ as a weighted average between the $ATT$ and the $ATU$.
 
 $$ATE=p \times ATT + (1-p) \times ATU $$
-
 
 ```{r}
 0.5*4.4+0.5*-3.2
 
 ```
 
-So we know the overall effect of the surgery is positive, although for some the effect is negative.  
+So we know the overall effect of the surgery is positive, although for some the effect is negative.
 
+**There exists heterogeneous treatment effects**.
 
-**There exists __heterogeneous treatment effects__.**
-
-Ok, what if were to simply compare the post-surgery life span for the two-groups using the fake doctor table above. 
-
+Ok, what if were to simply compare the post-surgery life span for the two-groups using the fake doctor table above.
 
 For those where $D=1$:
 
@@ -351,7 +316,6 @@ mean(c(7,5,4,10,9))
 
 ```
 
-
 For those where $D=0$:
 
 ```{r}
@@ -359,15 +323,13 @@ mean(c(6,8,10,6,7))
 
 ```
 
-So we get that the average treatment effect is 7-7.4=-0.4.  The treatment group lives 0.4 fewer years post-surgery than the chemo group when the perfect doctor assigned each unit to its best treatment.  
+So we get that the average treatment effect is 7-7.4=-0.4. The treatment group lives 0.4 fewer years post-surgery than the chemo group when the perfect doctor assigned each unit to its best treatment.
 
-This estimate is _biased_ because the people were optimally sorted into their best treatment option, creating fundamental differences between treatment and control group that are a direct function of the potential outcomes themselves.
+This estimate is *biased* because the people were optimally sorted into their best treatment option, creating fundamental differences between treatment and control group that are a direct function of the potential outcomes themselves.
 
 Here is what we are dealing with:
 
-$$\frac{1}{n_T}\sum_{i=1}^{n_T}(y_i|d_i=1)-\frac{1}{n_c}\sum_{i=1}^{n_C}(y_i|d_i=0)=E[Y^1]-E[Y^0]+E[Y^0|D=1]-E[Y^0|D=0]+(1-\pi)(ATT-ATU)$$
-In words: _simple difference in outcomes = average treatment effect+selection bias + heterogeneous treatment effect bias_
-
+$$\frac{1}{n_T}\sum_{i=1}^{n_T}(y_i|d_i=1)-\frac{1}{n_c}\sum_{i=1}^{n_C}(y_i|d_i=0)=E[Y^1]-E[Y^0]+E[Y^0|D=1]-E[Y^0|D=0]+(1-\pi)(ATT-ATU)$$ In words: *simple difference in outcomes = average treatment effect+selection bias + heterogeneous treatment effect bias*
 
 Given our previous calculation, our simple difference in outcomes is -0.4.
 
@@ -375,13 +337,12 @@ The average treatment effect we already calculated from the first table as 0.6.
 
 The selection bias. What we want to know is how do their potential outcomes under control differ?
 
-We can cheat and calculate this here because we have the complete potential outcomes. 
+We can cheat and calculate this here because we have the complete potential outcomes.
 
 ```{R}
 mean(c(1,1,2,1, 8)) #Y0 when D=1
 
 ```
-
 
 ```{R}
 mean(c(6, 8, 10,6,7)) #Y0 when D=0
@@ -390,7 +351,7 @@ mean(c(6, 8, 10,6,7)) #Y0 when D=0
 
 Therefore according to above: 2.6-7.4=-4.8.
 
-The heterogeneous treatment effect bias is simply the different returns for surgery for the two groups multiplied by the share of the population that is in the chemotherapy group at all.  We have already calculated ATT and ATU above.
+The heterogeneous treatment effect bias is simply the different returns for surgery for the two groups multiplied by the share of the population that is in the chemotherapy group at all. We have already calculated ATT and ATU above.
 
 ```{r}
 
@@ -400,19 +361,16 @@ The heterogeneous treatment effect bias is simply the different returns for surg
 
 0.5 because 5/10 patients are in the chemo group.
 
-So now we can see that 
+So now we can see that
 
-$$ -0.4=0.6-4.8+3.8 $$
-What is interesting here is that the simple difference in mean outcomes is not equal to the ATE (which is our parameter of interest) but it "contains" the ATE.  
+$$ -0.4=0.6-4.8+3.8 $$ What is interesting here is that the simple difference in mean outcomes is not equal to the ATE (which is our parameter of interest) but it "contains" the ATE.
 
--0.4 is the sum of three parts. In real life we cannot calculate the individual parts because we do not have data on the underlying counterfactual outcomes needed to make the calculations.  
+-0.4 is the sum of three parts. In real life we cannot calculate the individual parts because we do not have data on the underlying counterfactual outcomes needed to make the calculations.
 
 **The issue is that the parameter of interest, ATE is masked by two forms of bias.**
 
-We can make the strong assumption that the treatment **effects are constant and $ATU$=$ATT$ and thus the simple differences in averages is just the $ATE$+selection bias.** 
+We can make the strong assumption that the treatment **effects are constant and** $ATU$=$ATT$ and thus the simple differences in averages is just the $ATE$+selection bias.
 
-If we perform an experiment and randomly assign folks to treatment and control then we can assume selection bias is 0.  
+If we perform an experiment and randomly assign folks to treatment and control then we can assume selection bias is 0.
 
-If we are unable to perform and experiment then we have __methods to negotiate selection bias__, and that is __the entire field of causal inference.__ 
-
-
+If we are unable to perform and experiment then we have **methods to negotiate selection bias**, and that is **the entire field of causal inference.**

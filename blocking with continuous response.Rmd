@@ -452,30 +452,52 @@ summary(mod)
 
 Failing to account for the correct restrictions on randomization could be detrimental to conclusions, and maybe cost your company a lot of money. Don't do it!
 
+## **Notes**
+
+-   Randomized Complete Block Design
+
+    -   One blocking factor
+
+    -   One replicate
+
+    -   Replicates are randomized within each block
+
+-   Latin Squares Design
+
+    -   2 blocking factors
+
+    -   \# of treatments = \# of col blocks = \# of row blocks
+
+    -   very efficient
+
+-   Replicates or adding replicates reduces experimental error
+
+    -   increases precision
+
 ## More than one Replicate Per Block
 
-In the script experiment above each agent read each script a single time. In a randomized complete block design there is exactly one replicate per block.
+In the script experiment above each agent read each script a single time. In a randomized complete block design there is [exactly one replicate per block]{.underline}.
 
 But what if your experiment allows to get more than one replicate per block? Like in a test where your blocks are marketing areas and you are running the same web experiment in each marketing area. You aren't going to just show one person version A and another person version B in each marketing area and call it a day! You will run many replicates of each version in each marketing area.
 
-If that is the case the design is called a **generalized complete block design**. And the analysis changes because we want to make sure that we are always testing against the correct error term.
+If that is the case the design is called a **generalized complete block design**. And the analysis changes because we want to make sure that we are [always testing against the correct error term]{.underline}.
 
 ### Golf Example
 
-Consider an experiment from Golf Magazine. An experiment was conducted to determine the ideal tee height for driving a golf ball as far as possible. The purpose was to recommend to all readers of the article what tee height they should use. The treatment factor was the tee height. An experimental run consisted of a golfer hitting a golf ball from a specified height and the response was the distance the ball traveled. Because the magazine wanted to make a general conclusion, a representative group of golfers was used rather than one golfer. Since the ability to drive the ball by the golfers used in the study differed, it made sense to group or block the trials by golfer and randomize the order that each golfer hit a ball from each of the tee heights.
+Consider an experiment from Golf Magazine. An experiment was conducted to determine the ideal tee height for driving a golf ball as far as possible. The purpose was to recommend to all readers of the article what tee height they should use. The treatment factor was the tee height. An experimental run consisted of a golfer hitting a golf ball from a specified height and the response was the distance the ball traveled. Because the magazine wanted to make a general conclusion, a representative group of golfers was used rather than one golfer. Since the ability to drive the ball by the golfers used in the study differed, it made sense to group or [block the trials by golfer and randomize the order that each golfer hit a ball from each of the tee heights]{.underline}.
 
-But since hitting more than three golf balls would probably not fatigue a golfer and cause more variability in the driving distance there was no need to restrict a golfer to hitting just three balls (that would be the RCB, one replicate per golfer).
+But since hitting more than three golf balls would probably not fatigue a golfer and cause more variability in the driving distance there was no need to restrict a golfer to hitting just three balls (that would be the [RCB]{.underline}, one replicate per golfer).
 
-Instead each golfer hit 5 golf balls from each of 3 tee heights. Nine golfers were used in this part of the study. The data is contained in the golf.csv file.
+Instead each golfer [hit 5 golf balls from each of 3 tee heights]{.underline}. Nine golfers were used in this part of the study. The data is contained in the golf.csv file.
 
 How many rows will be in this data if it is long?
 
--   
+-   135 (9 golfers x 5 balls x 3 tee heights)
 
 Make the appropriate variables factors.
 
 ```{R}
-df<-read.csv("I:\\Classes\\ISA 633\\4. Blocking\\blocking continuous\\golf.csv")
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/golf.csv")
 head(df)
 df$Tee.Hgt<-as.factor(df$Tee.Hgt)
 df$Golfer.ID<-as.factor(df$Golfer.ID)
@@ -515,27 +537,29 @@ df %>% ggplot(aes(x=Golfer.ID, y=Distance, group=interaction(Tee.Hgt, Golfer.ID)
         
 ```
 
-The model for this experiment is a little different. Because now there are *replicate experimental units* in each block it is possible find the block by treatment interaction.
+The model for this experiment is a little different. Because now there are *replicate experimental units* in each [block it is possible find the block by treatment interaction]{.underline}.
 
 $$Y_{ij}=\mu+b_i+\tau_j+b\tau_{ij}+\epsilon_{ij}$$
 
-But let's think about what we would like to conclude from this study. We want to know which tee height is good for all golfers, not just for an individual golfer.
+-   We want to focus on the random error, which is the fourth term in the equation
+
+But let's think about what we would like to conclude from this study. [We want to know which tee height is good for all golfers, not just for an individual golfer]{.underline}.
 
 If the golfer by tee height interaction were significant in this model what would that imply?
 
--   
+-   Different heights are good for different golfers
 
-Recall the $MSE$ estimates the variation of the response around the treatment mean.
+Recall the [$MSE$]{.underline} estimates the variation of the response around the treatment mean.
 
 Given that definition above, what does the error term in the model represent? In other words when we use the traditional $MSE$ what are we testing?
 
--   
+-   individual golfer variation within a tee height
 
-So if use the "regular error term" we will not be able to generalize our conclusions to all golfers (from our random sample of golfers).
+So if use the "[regular error term]{.underline}" we will not be able to generalize our conclusions to all golfers (from our random sample of golfers).
 
 To generalize to all golfers we would have to ensure that the **treatment factor was significant across the various golfers**. In other words we need a different yardstick for comparison.
 
--   
+-   Use the golfer by tee height interaction as the error term
 
 That yardstick is going to be $MSE$ for the block by treatment interaction.
 
@@ -546,7 +570,13 @@ mod <- aov(Distance ~ Tee.Hgt + Error(Golfer.ID/Tee.Hgt), data = df)
 summary(mod)
 ```
 
-Here is the **incorrect way**!!!
+-   Df = 3 tee heights - 1 = 2
+
+-   9 golfers -1 \*2 replicates = 18 residuals
+
+Here is the **incorrect way**!!! -- DO NOT USE IN HOMEWORK
+
+-   Tee.Hgt\*Golfer.ID = all possible interactions
 
 ```{R}
 mod<-aov(Distance~Tee.Hgt*Golfer.ID, data=df)
@@ -567,354 +597,3 @@ Let's understand the degrees of freedom for these analyses.
 In the first, correct ANOVA above we see that Residuals df=16 which is the df for the interaction, which is what we want to test against.
 
 And of course you would follow by checking assumptions.
-
-## Python Code
-
-You can access the code [here](https://gist.github.com/weeseml/13fcfac35a36aa632d8f7c000b6d86cb). Note I was not able to produce the correct analysis for the Generalized Complete Block design in Python. If you are able to, please share otherwise you will have to use R.
-
-```{r}
-library(reticulate)
-```
-
-```{python}
-import pandas as pd
-
-df = pd.read_csv("I:\\Classes\\ISA 633\\4. Blocking\\blocking continuous\\CallCenter.csv")
-df['agent'] = df['agent'].astype('category')
-df['script'] = pd.Categorical(df['script'])
-
-```
-
-```{python}
-
-result = df.groupby('script')['seconds'].agg(mean='mean', sd='std', count='count').reset_index()
-
-# Displaying the result
-print(result)
-
-```
-
-```{python}
-import pandas as pd
-from plotnine import ggplot, aes, geom_text, xlab, ylab, theme_bw, theme, element_text
-
-# Creating the plot
-plot = (ggplot(df, aes(x='agent', y='seconds', group='script')) +
-        geom_text(aes(label='script'), size=8) +
-        xlab("Agent") + ylab("Seconds") +
-        theme_bw() +
-        theme(axis_title=element_text(size=18)))
-
-# Displaying the plot
-print(plot)
-
-```
-
-```{python}
-import statsmodels.api as sm
-from statsmodels.formula.api import ols
-
-# Fit the ANOVA model
-mod1 = ols('seconds ~ agent + script', data=df).fit()
-anova_results = sm.stats.anova_lm(mod1)
-
-# Display the summary of the ANOVA
-print(anova_results)
-
-
-```
-
-```{python}
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-
-# Create a 2x2 subplot
-fig, axs = plt.subplots(2, 2, figsize=(12, 10))
-
-# Plot 1: Residuals vs Leverage
-sm.graphics.plot_leverage_resid2(mod1, ax=axs[0, 0])
-
-# Plot 2: Residuals vs Fitted
-sns.residplot(x=mod1.fittedvalues, y=mod1.resid, lowess=True, ax=axs[0, 1],
-              line_kws={'color': 'red', 'lw': 1})
-axs[0, 1].set_title('Residuals vs Fitted')
-axs[0, 1].set_xlabel('Fitted values')
-axs[0, 1].set_ylabel('Residuals')
-
-# Plot 3: Scale-Location
-sns.regplot(x=mod1.fittedvalues, y=mod1.resid_pearson, scatter=True,
-            ci=False, lowess=True, ax=axs[1, 0], line_kws={'color': 'red', 'lw': 1})
-axs[1, 0].set_title('Scale-Location')
-axs[1, 0].set_xlabel('Fitted values')
-axs[1, 0].set_ylabel('Standardized Residuals')
-
-# Plot 4: Residuals vs Treatment
-sns.boxplot(x='script', y=mod1.resid, data=df, ax=axs[1, 1])
-axs[1, 1].set_title('Residuals vs Treatment')
-axs[1, 1].hlines(0, xmin=-0.5, xmax=1.5, colors='red', linestyles='dashed')
-
-plt.tight_layout()
-plt.show()
-```
-
-There is no equivavlent to `agricole` in python so I'm only showing the "by hand" method.
-
-```{python}
-
-import numpy as np
-np.random.seed(13)
-
-script = np.array([1, 2, 3, 4])
-
-# Sample the script for each agent
-agent1t = np.random.choice(script, 4, replace=False)
-agent2t = np.random.choice(script, 4, replace=False)
-agent3t = np.random.choice(script, 4, replace=False)
-agent4t = np.random.choice(script, 4, replace=False)
-agent5t = np.random.choice(script, 4, replace=False)
-agent6t = np.random.choice(script, 4, replace=False)
-
-# Combine the treatments
-treatments = np.concatenate([agent1t, agent2t, agent3t, agent4t, agent5t, agent6t])
-
-# Create the block factor
-block = np.repeat(["agent 1", "agent 2", "agent 3", "agent 4", "agent 5", "agent 6"], 4)
-
-# Create the data frame
-plan = pd.DataFrame({
-    'Agent': block,
-    'Script': treatments
-})
-
-# Display the plan
-print(plan)
-
-
-```
-
-```{python}
-
-# Set the seed for reproducibility
-np.random.seed(13)
-
-# Generate 24 normally distributed random numbers and round them to one decimal place
-plan['y'] = np.round(np.random.normal(size=24), 1)
-
-# Display the updated DataFrame
-print(plan)
-
-
-```
-
-```{python}
-mod1 = ols('y ~ Agent + Script', data=plan).fit()
-anova_results = sm.stats.anova_lm(mod1)
-
-# Display the summary of the ANOVA
-print(anova_results)
-
-```
-
-Again, no package so just the "by hand" method.
-
-```{python}
-
-# Set the seed for reproducibility
-np.random.seed(13)
-
-# Define the treatments
-treatments = np.array([1, 2, 3, 4])
-
-# Function to create a Latin Square Design
-def latin_square_design(treatments):
-    n = len(treatments)
-    lsd = np.zeros((n, n), dtype=int)
-    for i in range(n):
-        lsd[i] = np.roll(treatments, i)
-    np.random.shuffle(lsd.T)  # Transpose and shuffle columns
-    return lsd
-
-# Create the Latin Square Design
-lsd_array = latin_square_design(treatments)
-
-# Create a DataFrame from the array
-lsd = pd.DataFrame(lsd_array, columns=["Store 1", "Store 2", "Store 3", "Store 4"])
-lsd.index = ["Week 1", "Week 2", "Week 3", "Week 4"]
-lsd.index.name = 'row'
-
-# Display the Latin Square Design
-print(lsd)
-
-```
-
-I was lazy and decided to generate the response that I did above, I just needed to re-make the design with numeric factors.
-
-```{python}
- #Set the seed for reproducibility
-np.random.seed(13)
-
-# Define the treatments
-treatments = np.array([1, 2, 3, 4])
-
-# Function to create a Latin Square Design
-def latin_square_design(treatments):
-    n = len(treatments)
-    lsd = np.zeros((n, n), dtype=int)
-    for i in range(n):
-        lsd[i] = np.roll(treatments, i)
-    np.random.shuffle(lsd.T)  # Transpose and shuffle columns
-    return lsd
-
-# Create the Latin Square Design
-lsd_array = latin_square_design(treatments)
-
-# Create a DataFrame from the array
-lsd = pd.DataFrame(lsd_array, columns=["1", "2", "3", "4"])
-lsd.index = ["1", "2", "3", "4"]
-lsd.index.name = 'row'
-
-# Display the Latin Square Design
-print(lsd)
-
-
-```
-
-```{python}
-
-import pandas as pd
-import numpy as np
-
-
-# Convert the LSD DataFrame from wide to long format
-lsd_long = lsd.reset_index().melt(id_vars='row', var_name='col', value_name='treatment')
-
-# Display the long format DataFrame
-print(lsd_long)
-
-```
-
-```{python}
-
-import pandas as pd
-
-# Assuming df is your DataFrame and 'column_name' is the name of the column you want to convert
-lsd_long['row'] = pd.to_numeric(lsd_long['row'], errors='coerce')
-lsd_long['col'] = pd.to_numeric(lsd_long['col'], errors='coerce')
-# Display the updated DataFrame
-print(lsd_long)
-
-```
-
-```{python}
-
-
-import pandas as pd
-import numpy as np
-# Convert the 'row' and 'col' from categorical to numeric, and use the 'treatment' column for 'display'
-lsd_long['sales'] = (75 + 3 * lsd_long['col']
-                + 4 * lsd_long['row']
-                + 10 * lsd_long['treatment']
-                + np.random.normal(0, 3, 16))
-
-# Round the sales values to two decimal places
-lsd_long = lsd_long.round(2)
-
-# Display the updated DataFrame
-print(lsd_long)
-
-```
-
-```{python}
-
-
-mod1 = ols('sales ~ row + col+treatment', data=lsd_long).fit()
-anova_results = sm.stats.anova_lm(mod1)
-
-# Display the summary of the ANOVA
-print(anova_results)
-
-```
-
-```{python}
-
-import statsmodels.api as sm
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
-import matplotlib.pyplot as plt
-
-
-
-# Perform Tukey's HSD test
-tukey_result = pairwise_tukeyhsd(endog=lsd_long['sales'], groups=lsd_long['treatment'], alpha=0.05)
-
-# Print the summary
-print(tukey_result)
-
-tukey_result.plot_simultaneous()
-plt.show()
-```
-
-```{python}
-
-import pandas as pd
-
-# Reading the CSV file
-df = pd.read_csv("golf.csv")
-
-# Displaying the first few rows of the dataframe
-print(df.head())
-
-
-# Rename a column
-df = df.rename(columns={'Tee Hgt': 'TeeHgt'})
-df = df.rename(columns={'Golfer ID': 'GolferID'})
-# Display the DataFrame to verify the change
-print(df.head())
-
-
-# Converting 'Tee.Hgt' and 'Golfer.ID' columns to a categorical data type
-df['TeeHgt'] = df['TeeHgt'].astype('category')
-df['GolferID'] = df['GolferID'].astype('category')
-
-```
-
-```{python}
-import pandas as pd
-from plotnine import ggplot, aes, geom_boxplot, theme_bw, xlab, guides, guide_legend
-
-
-
-# Create an interaction column
-df['interaction'] = df['TeeHgt'].astype(str) + "_" + df['GolferID'].astype(str)
-
-# Creating the plot
-plot = (ggplot(df, aes(x='GolferID', y='Distance', group='interaction')) +
-        geom_boxplot(aes(color='TeeHgt')) +
-        theme_bw() +
-        xlab("Golfer") +
-        guides(color=guide_legend(title="Tee Height")))
-
-# Displaying the plot
-print(plot)
-
-
-```
-
-Here is as best we can do in python. This model is not exactly what we want, but it is close. Here is the link: <https://www.statsmodels.org/stable/mixed_linear.html>
-
-```{python}
-import pandas as pd
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-
-# Fit a mixed-effects model
-# Tee.Hgt as a fixed effect and Golfer.ID as a random effect
-md = smf.mixedlm("Distance ~ TeeHgt", df, groups=df["GolferID"], re_formula="~TeeHgt")
-mdf = md.fit()
-
-# Print the summary of the model
-print(mdf.summary())
-
-
-```

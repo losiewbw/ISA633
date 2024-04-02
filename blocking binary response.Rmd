@@ -1,0 +1,165 @@
+---
+title: "Blocking: Binary Response"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1. How to include a blocking factor when the response is binary.
+
+2. How to analyze a Latin Squares Design when the response is binary.
+
+
+All of the same concepts from blocking when the response is continuous apply to a binary response.  We will are interested in generalizing a conclusion and we are interested in controlling for a variable that we know affects the response but is not a factor. Let's look at this through an example. 
+
+
+### Example
+
+Enterprise is experimenting with m=3 banner ads as a mechanism to drive traffic to their website.  Since there are known regional difference in consumer preferences in the US, they wish to control for the nuisance factor "region" with 4 blocks corresponding to the four major US geographic regions: Northeast (NE), Northwest (NW), Southeast (SE) and Southwest (SW). A total of n=5000 people in each region were randomized to each ad condition.  Interest lies in determining whether or not the different ads perform similarly with respect to click-through-rate and which ad maximizes the click-through-rate.  But we want to control for the effect of region, in other words we want to know which banner ad is best, \emph{regardless} of region.
+
+What type of design is this?
+
+*
+
+We can model this with the following logistic regression model:
+
+$$ log(\frac{\pi_i}{1-\pi_i})= \alpha+\beta_2x_{i2}+\beta_3x_{i3}+b_1z_{i1}+b_2z_{i2}+b_3z_{i3}$$
+
+
+
+To determine whether there is a difference in click-through-rate from one ad to another we test $H_0:\beta_2=\beta3=0$.
+
+The data is contained in the file "enterprise.csv".
+
+```{r}
+library(tidyverse)
+df<-read.csv("enterprise.csv")
+```
+
+First we need to get the data in the right shape.
+
+```{r}
+df_long <- df %>% pivot_longer(!Block,
+                               names_to='factor',
+                               values_to = "CTR"
+                          )
+
+```
+
+Then let's make a summary.  Ignoring the region effect.
+
+```{R}
+
+df_long %>% group_by(factor, CTR) %>% summarise(n=n()) %>% mutate(freq=n/sum(n))
+
+```
+
+And by region.
+
+```{R}
+
+df_long %>% group_by(Block, CTR) %>% summarise(n=n()) %>% mutate(freq=n/sum(n))
+```
+
+
+Now remember we are not actually interested in the region effect, we are going to control for it in our model.  But it is interesting to see if there is one. Regardless, we will leave it in our model.
+
+Let's code the Block variable and the factor variable as `factors` in r. 
+
+```{R}
+df_long$factor<-as.factor(df_long$factor)
+df_long$Block<-as.factor(df_long$Block)
+
+```
+
+The let's fit the logistic model and use the `Chisq` likelihood ratio test.
+
+```{R}
+mod<-glm(CTR~factor+Block, data=df_long, family="binomial")
+anova(mod, test="Chisq")
+```
+
+
+And to follow up here is how you perform the multiple comparisons test for this generalized linear model.
+
+```{r}
+library(multcomp)
+comps<-glht(mod, linfct = mcp(factor="Tukey"))
+summary(comps)
+plot(comps)
+```
+
+Which ad should enterprise use?
+
+*
+
+What is your estimate of the CTR for the recommended ad?
+
+```{r}
+
+
+
+```
+
+## Latin Squares with Binary Response
+
+
+
+What would the model look like for this type of design?
+
+* 
+
+
+Back to the experiment with shelf facings on the the sales of toothpaste in drugstores.  The treatment factor is the number of shelf facings (1-4). We wish to use multiple stores in the experiment so we will need to account for that variability.  we would also like to account for the calendar week, to adjust for seasonal factors. Let's assume the response will be if the toothpaste was purchased or not. The response below is the total count of toothpastes sold every hour.  
+
+```{r, echo=FALSE}
+set.seed(13)
+library(agricolae)
+display<-c(1,2,3,4)
+outdesign<-design.lsd(display, seed=13)
+lsd<-outdesign$book
+levels(lsd$row)<-c("Week 1", "Week 2", "Week 3", "Week 4")
+levels(lsd$col)<-c("Store 1", "Store 2", "Store 3", "Store 4")
+lsd$y<-round(runif(16, min=1, max=84))
+lsd
+```
+
+Fit the `glm` and use the `Chisq` anova test.  But here we need to adjust the analysis a bit given we have a rate, like a collapsed data set, and not a response that is actually "0" or "1".
+
+Each display was shown for 12 hours for 7 days.  
+
+```{r}
+lsd$reps<-rep(12*7, 16)
+lsd
+```
+
+To model we have to input the successes (y in this case) and the failures (reps-y).
+
+```{r}
+mod<-glm(cbind(y, reps-y)~row+col+display, data=lsd, family="binomial")
+anova(mod, test="Chisq")
+
+```
+
+
+What is your conclusion?
+
+*
+  
+## Python Code
+
+There isn't anything new here.  Remember Python will not perform the post-hoc testing with a generalized linear model.
