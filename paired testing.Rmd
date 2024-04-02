@@ -1,0 +1,249 @@
+---
+title: "Paired Testing"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1. _Within-subject_ testing vs. _Between-subject_ testing.
+
+2. Know when paired testing is more appropriate.
+
+3. Understand why the standard error is less for paired testing.
+
+4. Know how to calculate power from a paired test.
+
+## Scenario
+
+The Acme company has created a typing program that it believes will increase typing speed.  In order to generate evidence as to the efficacy of the program, 20 employees who type regularly as part of their jobs are to take a training program that will help them type faster.  To determine whether the program really works, the employees are first given a standard typing test to measure their typing speed, the "before" test.  Then they go through the training course, followed by another test of typing speed, "after" test.  
+
+This is an example of _within subjects design_ where we measure the effect of both conditions ("before" and "after" training) for each subject.
+
+What is the response?
+
+*
+
+What is the treatment?
+
+*
+
+```{r}
+
+df<-read.csv("I:\\Classes\\ISA 633\\5. Matching\\paired testing\\typing.csv")
+```
+
+```{R}
+library(tidyverse)
+
+df_long<-df %>% pivot_longer(c("before", "after"),
+                             names_to = "test",
+                              values_to="score")
+
+```
+
+```{R}
+
+boxplot(score~test,data=df_long)
+
+```
+
+```{r}
+
+df_long %>% group_by(test) %>% summarize("mean"=mean(score), "sd"=sd(score), "count"=n())
+```
+
+And given what we know so far, if analyzed it we would get the following:
+
+```{R}
+
+t.test(score~test, data=df_long)
+
+```
+
+And we would conclude the training had no effect on the typing speed.
+
+But is that conclusion valid?
+
+*
+
+Why?
+
+* 
+
+## Matched Pairs
+
+In this case there is a positive correlation between the before and after variables.  This violates the assumption of _independence_ of the two samples.  
+
+This graph clearly shows an improvement in typing speed.
+
+```{r, echo=FALSE}
+df_long$test<-factor(df_long$test, levels=c("before", "after"))
+df_long %>% ggplot(aes(x=test, y=score, group=employee))+
+  geom_line(alpha=0.8)+
+  geom_point(alpha=0.7, size=2.5)+
+  theme_bw(base_size = 12)+
+  xlab("")+
+  ylab("Test score")
+
+```
+
+Recall the confidence interval for the difference between two samples is 
+
+$$d \pm t_{(1-\alpha/2,n-1)}\frac{s_d}{\sqrt{n}} $$
+What is the quantity $\frac{s_d}{\sqrt{n}}$ ?
+
+*
+
+To obtain a test for the matched pairs data we use
+
+```{R}
+
+t.test(score~test, data=df_long, paired=TRUE)
+
+```
+
+First we notice our conclusions changed.  But let's compare the confidence interval from the independent test with this paired test.
+The independent t-test 95\% CI for the difference is (-2.08, 12.08) and the paired interval is (-6.62, -3.38) which is much narrower.
+
+What would make a confidence interval with the same difference, same confidence level, same $n$ narrower?
+
+*
+
+The values  are 3.49 and 0.77 for the independent and the paired test.  That is huge reduction in variance!  But notice, the "signal" or the difference between the two means is 5 regardless.  
+
+In other words, with the same "signal" and a reduced standard error we were able to detect an effect in the paired test.  
+
+Another way to look at the better performance of the paired test is to recognize that the independent samples method assumes that there is no relationships between the before and after test scores and so overestimates the variance.
+
+The matched pair method takes account of the dependence and correctly estimates the variance.  
+
+Recall
+
+$$var(X+Y)=var(X)+var(Y)+2\times cov(X,Y) $$
+
+$$var(X-Y)=var(X)+var(Y)-2\times cov(X,Y)  $$
+where $cov(X,Y)=E[(X-\mu_x)(Y-\mu_x)]$.  
+
+A positive covariance  implies that if X is above its mean then Y is usually above its mean too and if X is below its mean, then Y is usually below its mean too. The "before" and "after" scores here have a positive covariance.
+
+Under the assumption of Independence 
+
+$$var(X-Y)=var(X)+var(Y)$$
+which is larger than 
+
+$$var(X-Y)=var(X)+var(Y)-2\times cov(X,Y)$$.
+
+## Experiment Design
+
+This test design has two potential problems:
+
+*
+
+
+* 
+
+
+We could have chose to perform a _between-subjects design_.  How might that work?
+
+*
+
+*
+
+What would be the downside of a _between-subjects design_ here?
+
+* 
+
+## Power of a Paired Test
+
+Because the standard error will be much lower we need to indicate that the test will be paired before we make any power calculations.
+
+```{R}
+
+power.t.test(delta=5, sd=11, power=0.8, sig.level = 0.05, type="paired")
+
+```
+
+
+## Python Code
+
+```{r}
+library(reticulate)
+
+```
+
+
+```{python}
+
+import pandas as pd
+
+df = pd.read_csv("I:\\Classes\\ISA 633\\5. Matching\\paired testing\\typing.csv")
+
+
+
+# Transforming the data from wide to long format
+df_long = pd.melt(df, id_vars=['employee'], value_vars=['before', 'after'], var_name='test', value_name='score')
+```
+
+
+```{python}
+from plotnine import ggplot, aes, geom_boxplot, theme, theme_bw
+
+plot = ggplot(df_long, aes(x='test', y='score')) + geom_boxplot() 
+        
+print(plot)
+
+
+```
+
+
+```{python}
+
+import scipy.stats as stats
+
+
+group1 = df_long[df_long['test'] == 'before']['score']
+group2 = df_long[df_long['test'] == 'after']['score']
+
+# Performing the paired t-test
+t_stat, p_val = stats.ttest_rel(group1, group2)
+
+print("T-statistic:", t_stat)
+print("p-value:", p_val)
+
+
+```
+
+
+```{python}
+
+from statsmodels.stats.power import TTestIndPower
+
+# Parameters
+effect_size = 5 / 11  # delta divided by standard deviation
+alpha = 0.05  # significance level
+power = 0.8  # power
+
+# Create an instance of TTestIndPower
+analysis = TTestIndPower()
+
+# Calculate the sample size
+result = analysis.solve_power(effect_size=effect_size, alpha=alpha, power=power, alternative='two-sided')
+
+print("Sample Size:", result)
+
+
+```

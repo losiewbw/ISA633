@@ -19,36 +19,40 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ## Topics Covered
 
-1. How to include a blocking factor when the response is binary.
+1.  How to include a blocking factor when the response is binary.
 
-2. How to analyze a Latin Squares Design when the response is binary.
+2.  How to analyze a Latin Squares Design when the response is binary.
 
-
-All of the same concepts from blocking when the response is continuous apply to a binary response.  We will are interested in generalizing a conclusion and we are interested in controlling for a variable that we know affects the response but is not a factor. Let's look at this through an example. 
-
+All of the same concepts from blocking when the response is continuous apply to a binary response. We will are interested in generalizing a conclusion and we are interested in controlling for a variable that we know affects the response but is not a factor. Let's look at this through an example.
 
 ### Example
 
-Enterprise is experimenting with m=3 banner ads as a mechanism to drive traffic to their website.  Since there are known regional difference in consumer preferences in the US, they wish to control for the nuisance factor "region" with 4 blocks corresponding to the four major US geographic regions: Northeast (NE), Northwest (NW), Southeast (SE) and Southwest (SW). A total of n=5000 people in each region were randomized to each ad condition.  Interest lies in determining whether or not the different ads perform similarly with respect to click-through-rate and which ad maximizes the click-through-rate.  But we want to control for the effect of region, in other words we want to know which banner ad is best, \emph{regardless} of region.
+Enterprise is experimenting with m=3 banner ads as a mechanism to drive traffic to their website. Since there are known regional difference in consumer preferences in the US, they wish to control for the nuisance factor "region" with 4 blocks corresponding to the four major US geographic regions: Northeast (NE), Northwest (NW), Southeast (SE) and Southwest (SW). A total of n=5000 people in each region were randomized to each ad condition. Interest lies in determining whether or not the different ads perform similarly with respect to click-through-rate and which ad maximizes the click-through-rate. But we want to control for the effect of region, in other words we want to know which banner ad is best, **regardless** of region.
 
-What type of design is this?
+What type of design is this? -- **TEST QUESTION: Given scenario and asking what type of design**
 
-*
+-   Randomized Complete Block Design (RCBD)
 
 We can model this with the following logistic regression model:
 
 $$ log(\frac{\pi_i}{1-\pi_i})= \alpha+\beta_2x_{i2}+\beta_3x_{i3}+b_1z_{i1}+b_2z_{i2}+b_3z_{i3}$$
 
+-   The quantity inside the log is the **odds**
 
+-   3 treatments but only two betas; third is the baseline so it is jumbled into the intercept term
 
-To determine whether there is a difference in click-through-rate from one ad to another we test $H_0:\beta_2=\beta3=0$.
+-   The intercept term is all of the bases together (when your block is 4 and your beta is 1)
+
+To determine whether there is a difference in click-through-rate from one ad to another we test $H_0:\beta_2=\beta_3=0$.
 
 The data is contained in the file "enterprise.csv".
 
 ```{r}
 library(tidyverse)
-df<-read.csv("enterprise.csv")
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/enterprise.csv")
 ```
+
+-   The data is wide (each column is one of the ads and then the block)
 
 First we need to get the data in the right shape.
 
@@ -60,7 +64,7 @@ df_long <- df %>% pivot_longer(!Block,
 
 ```
 
-Then let's make a summary.  Ignoring the region effect.
+Then let's make a summary. Ignoring the region effect.
 
 ```{R}
 
@@ -75,10 +79,9 @@ And by region.
 df_long %>% group_by(Block, CTR) %>% summarise(n=n()) %>% mutate(freq=n/sum(n))
 ```
 
+Now remember we are not actually interested in the region effect, we are going to control for it in our model. But it is interesting to see if there is one. Regardless, we will leave it in our model.
 
-Now remember we are not actually interested in the region effect, we are going to control for it in our model.  But it is interesting to see if there is one. Regardless, we will leave it in our model.
-
-Let's code the Block variable and the factor variable as `factors` in r. 
+Let's code the Block variable and the factor variable as `factors` in r.
 
 ```{R}
 df_long$factor<-as.factor(df_long$factor)
@@ -93,8 +96,11 @@ mod<-glm(CTR~factor+Block, data=df_long, family="binomial")
 anova(mod, test="Chisq")
 ```
 
+-   We did not randomly assign region so the block chi squared p score is irrelevant
 
-And to follow up here is how you perform the multiple comparisons test for this generalized linear model.
+-   Df = 3 treatments and 4 blocks all minus 1
+
+And to follow up here is how you perform the multiple comparisons test for this generalized linear model. (We do this because the factor score is significant)
 
 ```{r}
 library(multcomp)
@@ -105,26 +111,40 @@ plot(comps)
 
 Which ad should enterprise use?
 
-*
+-   1
 
-What is your estimate of the CTR for the recommended ad?
+Practice using logistic regression
 
 ```{r}
+summary(mod)
+```
 
+```{r}
+exp(-0.53479)
+```
+
+-   When banner ad 2 is shown the odds of clicking decrease by a factor of 0.586 as compared to banner ad 1, holding all else fixed
+
+What is your estimate of the click through rate for the recommended ad?
+
+```{r}
+prop.test(x=868, n=19132+868)
+
+a=868+1
+b=19132+1
+qbeta(0.025, a,b)
+qbeta(0.975,a,b)
 
 
 ```
 
 ## Latin Squares with Binary Response
 
-
-
 What would the model look like for this type of design?
 
-* 
+-   treatment + row factor + column factor
 
-
-Back to the experiment with shelf facings on the the sales of toothpaste in drugstores.  The treatment factor is the number of shelf facings (1-4). We wish to use multiple stores in the experiment so we will need to account for that variability.  we would also like to account for the calendar week, to adjust for seasonal factors. Let's assume the response will be if the toothpaste was purchased or not. The response below is the total count of toothpastes sold every hour.  
+Back to the experiment with shelf facings on the the sales of toothpaste in drugstores. The treatment factor is the number of shelf facings (1-4). We wish to use multiple stores in the experiment so we will need to account for that variability. we would also like to account for the calendar week, to adjust for seasonal factors. Let's assume the response will be if the toothpaste was purchased or not. The response below is the total count of toothpastes sold every hour.
 
 ```{r, echo=FALSE}
 set.seed(13)
@@ -138,9 +158,11 @@ lsd$y<-round(runif(16, min=1, max=84))
 lsd
 ```
 
-Fit the `glm` and use the `Chisq` anova test.  But here we need to adjust the analysis a bit given we have a rate, like a collapsed data set, and not a response that is actually "0" or "1".
+-   y is a collapsed reponse
 
-Each display was shown for 12 hours for 7 days.  
+Fit the `glm` and use the `Chisq` anova test. But here we need to adjust the analysis a bit given we have a rate, like a collapsed data set, and not a response that is actually "0" or "1".
+
+Each display was shown for 12 hours for 7 days.
 
 ```{r}
 lsd$reps<-rep(12*7, 16)
@@ -155,11 +177,8 @@ anova(mod, test="Chisq")
 
 ```
 
+-   The row and col p-values are irrevelant
 
 What is your conclusion?
 
-*
-  
-## Python Code
-
-There isn't anything new here.  Remember Python will not perform the post-hoc testing with a generalized linear model.
+-   The display did make a difference
