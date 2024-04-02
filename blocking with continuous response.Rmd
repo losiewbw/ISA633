@@ -75,7 +75,7 @@ $$ss\text{Total}=ss\text{T}+ ss\text{Blocks}+ ssE$$
 
 The ANOVA table for a blocked experiment looks like this.
 
-![](images/Screenshot 2024-03-19 133702.png)
+![](images/Screenshot%202024-03-19%20133702.png)
 
 -   If you have a blocking factor you always include it in your experiment no matter what
 
@@ -264,7 +264,7 @@ In general, a LSD for p treatments is a square containing $p$ rows and $p$ colum
 
 For example, in a [$p$=5]{.underline} LSD let the letters A, B, C, D, E represent the levels of the treatment. Then the design created is:
 
-![](images/Screenshot 2024-03-19 140439.png)
+![](images/Screenshot%202024-03-19%20140439.png)
 
 The columns represent one blocking factor and the row represent another blocking factor.
 
