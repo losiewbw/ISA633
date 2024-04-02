@@ -108,7 +108,7 @@ nonzero %>% group_by(treatment) %>% summarise(mean=mean(sales), sd=sd(sales), n=
 boxplot(sales~treatment, data=nonzero)
 ```
 
-## ANOVA = Analaysis of Variance
+## ANOVA = Analysis of Variance
 
 We will assume that each level of the treatment factor has different mean, $\mu_i$. The standard analysis for completely randomized designs is concerned with the structure of the means. We are trying to learn whether the means are all the same or if some differ from the others, and the nature of any differences that might be present.
 

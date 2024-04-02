@@ -10,7 +10,6 @@ output:
     highlight: tango
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,
                       cache = TRUE, 
@@ -18,58 +17,54 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE)
 ```
 
-
 ## Topics Covered
 
-1. Understand and perform a subgroup analysis using covariates collected in an experiment.
+1.  Understand and perform a subgroup analysis using covariates collected in an experiment.
 
-2. Understand the difference between a covariate and a treatment and the implications for causality.
+2.  Understand the difference between a covariate and a treatment and the implications for causality.
 
-3. Understand the deficiencies of subgroup analysis.
+3.  Understand the deficiencies of subgroup analysis.
 
-4. Understand the difference in confirmatory and exploratory subgroup analysis.
+4.  Understand the difference in confirmatory and exploratory subgroup analysis.
 
-5. Be able to calculate the probability of obtaining at least one type I error.
+5.  Be able to calculate the probability of obtaining at least one type I error.
 
-6. Family of errors (Oehlert, Chapter 5 intro)
+6.  Family of errors (Oehlert, Chapter 5 intro)
 
-7. Error rates (Oehlert, 5.1, ignore strong familywise error rate)
+7.  Error rates (Oehlert, 5.1, ignore strong familywise error rate)
 
-8. Bonferroni-Based Methods (Oehlert, 5.2)
+8.  Bonferroni-Based Methods (Oehlert, 5.2)
 
-9. False Discovery Rate
+9.  False Discovery Rate
 
 10. Understand the complications from Simpson's Paradox
-
 
 ## Example
 
 A publishing company tried to assess how discounts affect customers' future shopping behavior. It mailed a control group of customers a catalog containing a shallow discount--its standard practice. The treatment group of customers received catalogs with deep discounts on certain items. For two years, the company tracked purchases at an aggregate level, and the difference between the two groups was negligible.
 
-_Customers who received the catalog with shallow discounts spent $159_.
+*Customers who received the catalog with shallow discounts spent \$159*.
 
-_Customers who received the catalog with deep discounts spent: $157_.
+*Customers who received the catalog with deep discounts spent: \$157*.
 
 But...
 
 Further analysis revealed a disturbing outcome among customers who had recently purchased a high-priced item and then received a catalog offering the same item at 70% discount. Apparently upset by this perceived overcharge, these customers (some of them long-standing ones) cut future spending by 18%.
 
-_Customers who recently purchased a high priced item and received the catalog with shallow discounts spent $506/customer._
+*Customers who recently purchased a high priced item and received the catalog with shallow discounts spent \$506/customer.*
 
-_Customers who recently purchased a high priced item and received the catalog with deep discounts spent $415/customer._
+*Customers who recently purchased a high priced item and received the catalog with deep discounts spent \$415/customer.*
 
 Without a subgroup analysis the publishing firm would not have noted this sort of disastrous difference. The subsequently modified their direct-mail approach to avoid antagonizing its best customers.
 
-
 ## Landing Pages
 
-An online retailer ran a test to determine which of two lading pages for their website produces more sales.  The retailers website testing tool randomly assigned users to either see version A or version B, and the analytics platform recorded which version each visitor saw and how much that visitor purchased.  The data is contained in the file "LandingPages.csv". 
+An online retailer ran a test to determine which of two lading pages for their website produces more sales. The retailers website testing tool randomly assigned users to either see version A or version B, and the analytics platform recorded which version each visitor saw and how much that visitor purchased. The data is contained in the file "LandingPages.csv".
 
-
-Read in the data.  Should we analyze the data as is? Make a decision and run the appropriate test to see which landing page should be preferred.
+Read in the data. Should we analyze the data as is? Make a decision and run the appropriate test to see which landing page should be preferred.
 
 ```{r}
-df<-read.csv("I:\\Classes\\ISA 633\\2. AB Testing\\ab testing continuous\\LandingPages.csv")
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/LandingPages.csv")
 
 ```
 
@@ -94,9 +89,9 @@ This variable is called a covariate, which is a measurement on a experimental un
 
 Examples of covariates:
 
-* Gender
-* Operating system
-* Customer loyalty level
+-   Gender
+-   Operating system
+-   Customer loyalty level
 
 The next statement is pretty important. COVARIATES ARE NEVER RANDOMIZED BECAUSE THEY ARE NOT PART OF THE EXPERIMENT. CAUSALITY DOES NOT APPLY WHEN A TREATMENT IS NOT RANDOMIZED.
 
@@ -133,16 +128,16 @@ It seems that for email customers, version B is better than version A. For inter
 
 Here are some important points from this analysis:
 
-* If we had not excluded the zeros from this analysis, we might not have found this effect.
+-   If we had not excluded the zeros from this analysis, we might not have found this effect.
 
 ```{R}
 withzeros<-df %>% filter(source=="email")
 t.test(withzeros$sales~withzeros$version)
 ```
 
-* Because the treatment (version A or version B) is randomized within the group of persons who clicked on the email link, we can give a causal interpretation to the result: version B causes persons who click on the email link to spend more, conditional on the person spending in the first place.
+-   Because the treatment (version A or version B) is randomized within the group of persons who clicked on the email link, we can give a causal interpretation to the result: version B causes persons who click on the email link to spend more, conditional on the person spending in the first place.
 
-* Causality does not apply when the treatment is not randomized. Suppose we tested whether Internet or email had a higher mean for nonzero buys.
+-   Causality does not apply when the treatment is not randomized. Suppose we tested whether Internet or email had a higher mean for nonzero buys.
 
 ```{r}
 t.test(sub$sales~sub$source)
@@ -150,9 +145,9 @@ t.test(sub$sales~sub$source)
 
 The 95% CI is showing that email is better than internet but this is only based on correlation!!!!!! This is not casual. But it might not be a bad idea to test this in a follow up experiment.
 
-* Subgroup analysis can suffer from the statistical problems of low power and multiple hypotheses, therefore run another experiment before actually betting money on a subgroup result.
+-   Subgroup analysis can suffer from the statistical problems of low power and multiple hypotheses, therefore run another experiment before actually betting money on a subgroup result.
 
-* Only "slice" on variables collected before the experiment!!
+-   Only "slice" on variables collected before the experiment!!
 
 ## Deficiencies of Subgroup Analysis
 
@@ -160,10 +155,15 @@ In the last analysis we had one covariate. But if you conduct an experiment on c
 
 But as the number of subgroup analyses performed increases, the probability of a Type I error increases: we are back to a multiple testing problem!
 
-If we have 15 covariates what is the probability of making at least one type I error? Assume $\alpha=0.05$. 
+If we have 15 covariates what is the probability of making at least one type I error? Assume $\alpha=0.05$.
 
-* 0.537
+```{r}
+1-(1-0.05)^15
 
+```
+
+
+-   0.537
 
 $$P(\text{at least one type I error})=1-P(\text{no type I errors})$$
 
@@ -174,20 +174,19 @@ $$P(\text{at least one type I error})=1-(1-\alpha)^k$$
 
 ```
 
-
 ## Controling Type I Error Rate
 
-When we make several related tests or confidence interval estimates at the same time we need to make _multiple comparisons_ or do _simultaneous inference_.  
+When we make several related tests or confidence interval estimates at the same time we need to make *multiple comparisons* or do *simultaneous inference*.
 
 The issue with making several tests or intervals at one time is one of error rates.
 
-Each individual test or confidence interval has a type I error rate of $\alpha$ that can be controlled by the experimenter. 
+Each individual test or confidence interval has a type I error rate of $\alpha$ that can be controlled by the experimenter.
 
-If we consider tests together as a _family_ then we also compute type I error rate for the family of tests or intervals.  When a family contains more and more true null hypotheses, the probability that one or more of these true null hypotheses is rejected increases.  
+If we consider tests together as a *family* then we also compute type I error rate for the family of tests or intervals. When a family contains more and more true null hypotheses, the probability that one or more of these true null hypotheses is rejected increases.
 
 Multiple comparison procedures deal with type I error rates for families of tests.
 
-### Oehlert Example 5.1 
+### Oehlert Example 5.1
 
 We are considering a new cleaning solvent that is a mixture of 100 chemicals. Suppose that regulations state that a mixture is safe if all of its constituents are safe (pretending we can ignore chemical interaction). We test the 100 chemicals for causing cancer, running each test at the 5% level.
 
@@ -195,8 +194,7 @@ What happens if all 100 chemicals are harmless and safe?
 
 Since $\alpha$=0.05 we would expect, on average, 5 of the 100 chemicals will be declared carcinogenic, even when all are safe.
 
-Worse, if the tests are _independent_ (think coin flip with an unbalanced coin) then one or more of the chemicals will be declared unsafe in 99.4\% of all sets of experiments we run, even if all the chemicals are safe.
-
+Worse, if the tests are *independent* (think coin flip with an unbalanced coin) then one or more of the chemicals will be declared unsafe in 99.4% of all sets of experiments we run, even if all the chemicals are safe.
 
 $P(\text{a chem. declared unsafe})=0.05$
 
@@ -219,27 +217,25 @@ $P(\text{at least one declared unsafe})=1-0.005920529$
 
 ```
 
-This 99.4\% is a combined Type I error rate; clearly we have a problem.
-
+This 99.4% is a combined Type I error rate; clearly we have a problem.
 
 ## Different Type I Error Rates
 
-We define $\alpha$ as our _comparisonwise error rate_ or our standard type I error rate.
+We define $\alpha$ as our *comparisonwise error rate* or our standard type I error rate.
 
-We have a set K number of null hypotheses: $H_{01}$, $H_{02}$... $H_{0K}$.  
+We have a set K number of null hypotheses: $H_{01}$, $H_{02}$... $H_{0K}$.
 
 We also have the intersection hypothesis $H_0$ which is true if all of the $H_{0i}$ are true.
 
-1. _Experimentwise error rate_: the probability of rejecting one or more of the $H_{0i}$ and thus rejecting $H_0$ when all of the $H_{0i}$ are true.  In the chemical example this the fraction of times we would declare one or more of the chemicals unsafe when in fact all were safe.  There is no penalty for any false rejections (rejecting a true $H_{0i}$) that may have occurred.
+1.  *Experimentwise error rate*: the probability of rejecting one or more of the $H_{0i}$ and thus rejecting $H_0$ when all of the $H_{0i}$ are true. In the chemical example this the fraction of times we would declare one or more of the chemicals unsafe when in fact all were safe. There is no penalty for any false rejections (rejecting a true $H_{0i}$) that may have occurred.
 
-2. _False discovery rate_ (FDR): A statistical discovery is the rejection of a $H_{0i}$.  So a false discovery is a type I error.  The false discovery rate is the expected value of the number of false discoveries divided by the total number of discoveries. If $H_0$ is true then all discoveries are false and the FDR is just the experimentwise error rate.  
+2.  *False discovery rate* (FDR): A statistical discovery is the rejection of a $H_{0i}$. So a false discovery is a type I error. The false discovery rate is the expected value of the number of false discoveries divided by the total number of discoveries. If $H_0$ is true then all discoveries are false and the FDR is just the experimentwise error rate.
 
-3. _Simultaneous confidence intervals_: all confidence intervals must cover their true parameter simultaneously with confidence $1-\alpha$. This means individual confidence intervals will have coverage greater than $1-\alpha$.
-
+3.  *Simultaneous confidence intervals*: all confidence intervals must cover their true parameter simultaneously with confidence $1-\alpha$. This means individual confidence intervals will have coverage greater than $1-\alpha$.
 
 ### Example 5.2
 
-Many functional Magnetic Resonance Imaging (fMRI) studies are interested in determining which areas of the brain are “activated” when a subject is engaged in some task. Any one image slice of the brain may contain 5000 voxels (individual locations to be studied), and one analysis method produces a t-test for each of the 5000 voxels. Null hypothesis $H_{0i}$ is that voxel $i$ is not activated. 
+Many functional Magnetic Resonance Imaging (fMRI) studies are interested in determining which areas of the brain are “activated” when a subject is engaged in some task. Any one image slice of the brain may contain 5000 voxels (individual locations to be studied), and one analysis method produces a t-test for each of the 5000 voxels. Null hypothesis $H_{0i}$ is that voxel $i$ is not activated.
 
 The type I error rate we should use depends on what you are interested in studying.
 
@@ -247,28 +243,25 @@ Which error rate adjustment should we use?
 
 If we only wish to look at one brain region (a single test):
 
-* No adjustment as we are only conducting one test
+-   No adjustment as we are only conducting one test
 
 If we wish to determine if there are any activation in the image:
 
-* The false discovery rate 
-
+-   The false discovery rate
 
 If we believe there will be many activation (that several null hypotheses are not true):
 
-* Experimentwise error rate
-
+-   Experimentwise error rate
 
 If I wish to estimate the amount of activation in every voxel
 
-* Simultaneous confidence intervals
+-   Simultaneous confidence intervals
 
-
-_Simultaneous inference_ is deciding which error rate we wish to control, and then using a procedure that controls the desired error rate.
+*Simultaneous inference* is deciding which error rate we wish to control, and then using a procedure that controls the desired error rate.
 
 ## Methods
 
-Before I get into some different methods I should point out that there are a lot of ways to adjust the error rates.  I'm going to introduce the methods that I think you will come across working for an organization performing experiments.
+Before I get into some different methods I should point out that there are a lot of ways to adjust the error rates. I'm going to introduce the methods that I think you will come across working for an organization performing experiments.
 
 Some of these methods are pretty specific to a particular situation, so I will point that out as we go.
 
@@ -276,51 +269,47 @@ Some of these methods are pretty specific to a particular situation, so I will p
 
 The Bonferroni procedure says to obtain simultaneous $1-\alpha$ individual confidence intervals with coverage $1-\alpha/K$ where K is the number of tests you will perform (the number of $H_{0i}$). To conduct two sided hypothesis tests simply adjust the rejection region by $\alpha/K$. In other words reject $H_{0i}$ if the corresponding p-value is less than $\alpha/K$.
 
-Be aware that this is one of the more stringent adjustments.  
+Be aware that this is one of the more stringent adjustments.
 
-You would apply this correction in a situation where you are preforming a lot of t-tests.  For example, if you were working at Bing and you made "the change" to the search displays (see Module 1 notes) and you measured 25 different metrics then you would be making 25 different t-tests where the two conditions are had "the change" and did not.  You can use the Bonferroni correction in this situation.
+You would apply this correction in a situation where you are preforming a lot of t-tests. For example, if you were working at Bing and you made "the change" to the search displays (see Module 1 notes) and you measured 25 different metrics then you would be making 25 different t-tests where the two conditions are had "the change" and did not. You can use the Bonferroni correction in this situation.
 
 ### FDR method
 
-1. Sort the p-values largest to smallest.
+1.  Sort the p-values largest to smallest.
 
-2. For each p-value, calculate an adjusted $\alpha^*$ by multiplying its $rank*\alpha/K$ 
+2.  For each p-value, calculate an adjusted $\alpha^*$ by multiplying its $rank*\alpha/K$
 
-3. The FRD $\alpha^*$ is the first value that rejects the null hypotheses. 
+3.  The FRD $\alpha^*$ is the first value that rejects the null hypotheses.
 
 Example:
 
 ![](Capture1.JPG)
 
-
-To use these methods in r you can use the `p.adjust` package in r.  Now this package does not adjust the alpha level, it actually adjusts the p-values (which is just a matter of algebra in the formulas).  When using these p-values, use what ever specified value of $\alpha$ you wish.
+To use these methods in r you can use the `p.adjust` package in r. Now this package does not adjust the alpha level, it actually adjusts the p-values (which is just a matter of algebra in the formulas). When using these p-values, use what ever specified value of $\alpha$ you wish.
 
 ```{r}
 p<-c(0.73,0.42,0.41,0.4,0.29,0.24,0.15,0.13,0.08,0.07,0.02,0.01,0.006,0.004,0.002,0.002,0.001,0.001,0.0001,0.0001,0.0001)
 p.adjust(p, method = c("bonferroni"), n = length(p))
 ```
 
-
 ```{r}
 p<-c(0.73,0.42,0.41,0.4,0.29,0.24,0.15,0.13,0.08,0.07,0.02,0.01,0.006,0.004,0.002,0.002,0.001,0.001,0.0001,0.0001,0.0001)
 p.adjust(p, method = c("fdr"), n = length(p))
 ```
 
-
-
 ## Simpons Paradox
 
-Simpson's Paradox refers to a phenomena where the results of an analysis of aggregated data are the reverse of subgroup results.  
+Simpson's Paradox refers to a phenomena where the results of an analysis of aggregated data are the reverse of subgroup results.
 
 One of the best known examples of Simpson's Paradox comes from a study on gender bias at [UC Berkeley](https://en.wikipedia.org/wiki/Simpson%27s_paradox#UC_Berkeley_gender_bias). It appears, when looking at the aggregate, that in the fall of 1973 men were more likely to be admitted than women.
 
-Note, this only occurs if your groups are different sizes.  
+Note, this only occurs if your groups are different sizes.
 
-Your next question is, but in A/B testing don't we basically ensure the groups are the same size?  Sometimes that doesn't happen.  Or sometimes you stratify your sample by usage level, demographic area, language, etc.
+Your next question is, but in A/B testing don't we basically ensure the groups are the same size? Sometimes that doesn't happen. Or sometimes you stratify your sample by usage level, demographic area, language, etc.
 
 Let's look at an example from [HomeAway](https://medium.com/homeaway-tech-blog/simpsons-paradox-in-a-b-testing-93af7a2f3307)
 
-This type of problem can also happen in the _ramping up_ phase, where you are intentionally putting more and more traffic toward a promising treatment. So intentionally the treatment and control groups are not the same size
+This type of problem can also happen in the *ramping up* phase, where you are intentionally putting more and more traffic toward a promising treatment. So intentionally the treatment and control groups are not the same size
 
 ## Python Code
 
@@ -337,7 +326,6 @@ df = pd.read_csv("I:\\Classes\\ISA 633\\2. AB Testing\\ab testing continuous\\La
 print(df.head())
 
 ```
-
 
 ```{python}
 sub = df[df['sales'] > 0]
@@ -381,7 +369,6 @@ print(frequency_table)
 
 
 ```
-
 
 ```{python}
 
