@@ -155,19 +155,19 @@ $$var(X-Y)=var(X)+var(Y)-2\times cov(X,Y)$$
 
 This test design has two potential problems:
 
--   
+-   not a blind test
 
--   
+-   maybe its not training but it is the testing within subjects design
 
 We could have chose to perform a *between-subjects design*. How might that work?
 
--   
+-   20 people in before (control 20 people ==\> course)
 
--   
+-   Instead of controlling for typing ability --\> randomizing over it
 
 What would be the downside of a *between-subjects design* here?
 
--   
+-   Need more n (samples) - have more error
 
 ## Power of a Paired Test
 
@@ -176,71 +176,5 @@ Because the standard error will be much lower we need to indicate that the test 
 ```{R}
 
 power.t.test(delta=5, sd=11, power=0.8, sig.level = 0.05, type="paired")
-
-```
-
-## Python Code
-
-```{r}
-library(reticulate)
-
-```
-
-```{python}
-
-import pandas as pd
-
-df = pd.read_csv("I:\\Classes\\ISA 633\\5. Matching\\paired testing\\typing.csv")
-
-
-
-# Transforming the data from wide to long format
-df_long = pd.melt(df, id_vars=['employee'], value_vars=['before', 'after'], var_name='test', value_name='score')
-```
-
-```{python}
-from plotnine import ggplot, aes, geom_boxplot, theme, theme_bw
-
-plot = ggplot(df_long, aes(x='test', y='score')) + geom_boxplot() 
-        
-print(plot)
-
-
-```
-
-```{python}
-
-import scipy.stats as stats
-
-
-group1 = df_long[df_long['test'] == 'before']['score']
-group2 = df_long[df_long['test'] == 'after']['score']
-
-# Performing the paired t-test
-t_stat, p_val = stats.ttest_rel(group1, group2)
-
-print("T-statistic:", t_stat)
-print("p-value:", p_val)
-
-
-```
-
-```{python}
-
-from statsmodels.stats.power import TTestIndPower
-
-# Parameters
-effect_size = 5 / 11  # delta divided by standard deviation
-alpha = 0.05  # significance level
-power = 0.8  # power
-
-# Create an instance of TTestIndPower
-analysis = TTestIndPower()
-
-# Calculate the sample size
-result = analysis.solve_power(effect_size=effect_size, alpha=alpha, power=power, alternative='two-sided')
-
-print("Sample Size:", result)
-
 
 ```

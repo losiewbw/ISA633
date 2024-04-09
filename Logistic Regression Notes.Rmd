@@ -1,12 +1,14 @@
 ---
 title: "Logistic Regression Part 1 Notes"
 date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
-
 output:
  html_document: 
   
     toc: true
     toc_float: true
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -20,89 +22,104 @@ knitr::opts_chunk$set(echo = TRUE,
 pacman::p_load(tidyverse, DataExplorer,  ggplot2, pROC)
 ```
 
-
 ## Topics Covered
 
+1.  The three reasons we can't use multiple linear regression to fit a
+    model with a binary response
 
-1.	The three reasons we can't use multiple linear regression to fit a model with a binary response 
+2.  The basic operation of manipulating the probabilities to get a
+    continuous number (just know we use the logit transform).
 
-2.	The basic operation of manipulating the probabilities to get a continuous number (just know we use the logit transform).
+3.  How to interpret (simple and multiple logistic regression model)
+    coefficients.
 
-3.	How to interpret (simple and multiple logistic regression model) coefficients. 
+4.  How to calculate predicted probabilities from the logistic model.
 
-4.	How to calculate predicted probabilities from the logistic model.
+5.  How to calculate the logit, we can use this for ranking and save a
+    step.
 
-5.	How to calculate the logit, we can use this for ranking and save a step.
+6.  How the logistic regression coefficients are computed and a little
+    about the method of maximum likelihood.
 
-6.	How the logistic regression coefficients are computed and a little about the method of maximum likelihood. 
-
-7.	How to evaluate a logistic regression model as an explanatory model. 
+7.  How to evaluate a logistic regression model as an explanatory model.
 
 ### Introduction
 
-Logistic regression is a classification method.  It can be used as a classifier and also to find what factors distinguish between different classes, called profiling.
+**Logistic regression is a classification method**. It can be used as a
+classifier and also to find what factors distinguish between different
+classes, called profiling.
 
 Examples:
 
-1.	Classifying customers as returning or non-returning-classification
+1.  Classifying customers as returning or non-returning-classification
 
-2.	Finding factors that differentiate between male and female top executives---profiling
+2.  Finding factors that differentiate between male and female top
+    executives---profiling
 
-3.	Predicting the approval or disapproval of a loan based on information such as credit scores--classification
+3.  Predicting the approval or disapproval of a loan based on
+    information such as credit scores--classification
 
-Logistic regression is used as an explanatory model (in an ISA 291 context) and as predictive model.
+Logistic regression is used as an explanatory model (in an ISA 291
+context) and as predictive model.
 
-You have just learned multiple regression as an explanatory model and a predictive model, you will learn logistic regression as both. 
+You have just learned multiple regression as an explanatory model and a
+predictive model, you will learn logistic regression as both.
 
+The appendix in Chapter 10 teaches some diagnostics for the explanatory
+application of logistic regression.
 
-The appendix in Chapter 10 teaches some diagnostics for the explanatory application of logistic regression.
+-   Better to have decisions broken into binary vs multiclass
 
 ### Developing the Logistic Model
 
 We are used to seeing the Linear Regression Model:
 
 $$y=\beta_0+\beta_1x_1+\beta_2x_2+...+\beta_px_p+\epsilon$$
+
+-   probabilistic model
+
 And the assumptions regarding $\epsilon$ are:
 
-1.
+1.  probability distribution of $\epsilon$ is normal
 
-2.
+2.  probability distribution of $\epsilon$ has a constant variance
 
-3.
+3.  probability distribution of $\epsilon$ has a mean = 0
 
-4.
+4.  probability distribution of $\epsilon$ has values that are
+    independent of all observations
 
 Consider the simple linear regression model:
 
-
 $$y=\beta_0+\beta_1x_1+\epsilon$$
 
-What is the _expected value_ of the model above?
+What is the *expected value* of the model above?
 
+E[y] = true population mean (B0 + B1X1)
 
-
+-   no error term because the expected error term in y is 0
 
 So what if Y has two response: 0 or 1?
 
-
-
-
-
-
 This is problematic because:
 
-1. The error terms are non-normal.
+1.  The error terms are non-normal.
 
-2. The variance of $\epsilon$ is not constant across different values of the response.  
+2.  The variance of $\epsilon$ is not constant across different values
+    of the response.
 
-3. The equation above has no constraints on the value of $y$ that it will predict, $\hat{y}$.
-
+3.  The equation above has no constraints on the value of $y$ that it
+    will predict, $\hat{y}$.
 
 What do we need?
 
-We need a model that (1) requires that the predicted responses will be between 0 and 1 because we need to model $P(y=1)=p$ and (2) does not have normal distribution assumptions and constant variance assumptions on the error terms.
+We need a model that (1) requires that the predicted responses will be
+between 0 and 1 because we need to model $P(y=1)=p$ and (2) does not
+have normal distribution assumptions and constant variance assumptions
+on the error terms.
 
-And the Logistic Distribution helps us out.  The form of the model when the response is binary is:
+And the [Logistic Distribution]{.underline} helps us out. The form of
+the model when the response is binary is:
 
 $$ E(y)=P(y=1)=p=\frac{exp(\beta_0+\beta_1x_1)}{1+exp(\beta_0+\beta_1x_1)}=\frac{1}{1+exp(-(\beta_0+\beta_1x_1))}$$
 
@@ -110,7 +127,9 @@ And using algebra:
 
 $$ ln(\frac{p}{1-p})=\beta_0+\beta_1x_1 $$
 
-Recall, $p=P(y=1)$ and therefore $1-p=P(y=0)$ so the equation above the ratio $\frac{p}{1-p}$ is called the __odds__ and you will hear $ln(\frac{p}{1-p})$ called the log(odds).  
+Recall, $p=P(y=1)$ and therefore $1-p=P(y=0)$ so the equation above the
+ratio $\frac{p}{1-p}$ is called the **odds** and you will hear
+$ln(\frac{p}{1-p})$ called the log(odds).
 
 Often we refer to $ln(\frac{p}{1-p})$ as the $\text{logit}(p)$.
 
@@ -118,8 +137,9 @@ And if you want the odds directly you can use more algebra and get:
 
 $$\frac{p}{1-p}=exp(\beta_0+\beta_1x_1)$$
 
-
-So modeling the log(odds) instead of the actual response takes care of the problem with constraints on the response function because $-\infty < ln(\frac{p}{1-p}) <\infty$.
+So modeling the log(odds) instead of the actual response takes care of
+the problem with constraints on the response function because
+$-\infty < ln(\frac{p}{1-p}) <\infty$.
 
 ### Interpreting Coefficents
 
@@ -127,67 +147,82 @@ Recall the odds are given by:
 
 $$\text{Odds}=exp(\beta_0+\beta_1x_1)$$
 
-And if we have this simple model with a single predictor then: 
+And if we have this simple model with a single predictor then:
 
-$$\text{Odds}(Y=1|x_1)=exp(\beta_0+\beta_1x_1)$$
-We can think of this model as a multiplicative model of the odds.
+$$\text{Odds}(Y=1|x_1)=exp(\beta_0+\beta_1x_1)$$ We can think of this
+model as a multiplicative model of the odds.
 
-So for example if we are modeling whether someone accepts a personal loan (Yes or No) based on their income ($x_1$) then
+So for example if we are modeling whether someone accepts a personal
+loan (Yes or No) based on their income ($x_1$) then
 
 $$\text{Odds}(\text{Personal Loan}=\text{Yes}|Income)=exp(\beta_0+\beta_1\text{Income})$$
-If the estimated coefficient for income $\hat{\beta_1}=0.03757$ and $\hat{\beta_0}=-6.16715$ then the odds that a customer with zero income with  accept a long is estimated by:
+If the estimated coefficient for income $\hat{\beta_1}=0.03757$ and
+$\hat{\beta_0}=-6.16715$ then the odds that a customer with zero income
+with accept a long is estimated by:
 
 $$exp(-6.16715)+0.03757(0)=0.0021$$
 
-We can think of those as the _base case odds_.  The odds of accepting a loan with an income of \$100K will increase by a multiplicative factor of $exp(0.03757)(100)=42.8$ over the base case odds.  So the the odds that such a customer will accept the offer are 
+We can think of those as the *base case odds*. The odds of accepting a
+loan with an income of \$100K will increase by a multiplicative factor
+of $exp(0.03757)(100)=42.8$ over the base case odds. So the the odds
+that such a customer will accept the offer are
 
 $$exp(-6.16715)+0.03757(100)=0.0898$$.
-
 
 Let's suppose we have this model:
 
 $$ln(\frac{p}{1-p})=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3$$
 
+Suppose that the value of $x_1$ is increased by one unit from $x_1+1$
+while the other predictors ($x_2$ and $x_3$) are held constant.
 
-Suppose that the value of $x_1$ is increased by one unit from $x_1+1$ while the other predictors ($x_2$ and $x_3$) are held constant. 
- 
- 
- We get the odds ratio:
- 
- $$\frac{\text{Odds}(x_1+1, x_2, x_3)}{\text{Odds}(x_1, x_2, x_3)}=\frac{exp(\beta_0+\beta_1(x_1+1)+\beta_2x_2+\beta_3x_3)}{exp(\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3)}=exp(\beta_1)$$
+We get the odds ratio:
 
-This tell us that a single unit increase in $x_1$ holding $x_2$ and $x_3$ constant is associated with an increase in the odds that customer accepts the offer by a factor of $exp(\beta_1)$.
+$$\frac{\text{Odds}(x_1+1, x_2, x_3)}{\text{Odds}(x_1, x_2, x_3)}=\frac{exp(\beta_0+\beta_1(x_1+1)+\beta_2x_2+\beta_3x_3)}{exp(\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3)}=exp(\beta_1)$$
 
+This tell us that **a single unit increase in** $x_1$ **holding** $x_2$
+**and** $x_3$ **constant is associated with an increase in the odds that
+customer accepts the offer by a factor of** $exp(\beta_1)$**.**
 
 #### Categorical Predictors
 
-When a predictor is a dummy variable, the interpretation is technically the same, but it has a different practical meaning. Let's suppose in the personal loan example we have a dummy variable indicating the customer has a CD account.  And suppose the coefficient estimate for that dummy variable is 4.023356.
+When a predictor is a dummy variable, the interpretation is technically
+the same, but it has a different practical meaning. Let's suppose in the
+personal loan example we have a dummy variable indicating the customer
+has a CD account. And suppose the coefficient estimate for that dummy
+variable is 4.023356.
 
-We interpret this coefficient as follows: $exp(4.023556)=55.9$ are the odds that a customer who has a CD account will accept the offer relative to a customer who does not have a CD account, holding all other variables constant.
+We interpret this coefficient as follows: $exp(4.023556)=55.9$ are the
+odds that a customer who has a CD account will accept the offer relative
+to a customer who does not have a CD account, holding all other
+variables constant.
 
 ### Estimating Coefficients
- 
 
-But because of the problems with the error terms not being normal or constant variance we can't use the method least squares to find the estimates for $\beta_0$ and $\beta_1$.
+But because of the problems with the error terms not being normal or
+constant variance we can't use the method least squares to find the
+estimates for $\beta_0$ and $\beta_1$.
 
-
-Instead we use the _method of maximum likelihood_ to provide the estimates.
-
+Instead we use the *method of maximum likelihood* to provide the
+estimates.
 
 ### Example
 
-Back to the lawnmower data for simplicity.  
+Back to the lawnmower data for simplicity.
 
 ```{r}
-mower<-read.csv("RidingMowersex.csv", stringsAsFactors = TRUE)
+mower<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/RidingMowersex.csv", stringsAsFactors = TRUE)
 mower$Y.ownership<-as.factor(mower$Y.ownership)
 prop.table(table(mower$Ownership))
 ```
 
-We use the `glm()` function to fit a logistic regression model. `glm()` stands for general linear model.  We have to be specific to what type of model we are fitting.  We will use the `family="binomial" to indicate that the error terms are distributed with a binomial distribution.
+We use the `glm()` function to fit a logistic regression model. `glm()`
+stands for general linear model. We have to be specific to what type of
+model we are fitting. We will use the \`family="binomial" to indicate
+that the error terms are distributed with a binomial distribution.
 
-If we are using a response like Ownership we need to make sure the order of the levels is correct:
-
+If we are using a response like Ownership we need to make sure the order
+of the levels is correct:
 
 ```{r}
 levels(mower$Ownership)
@@ -195,15 +230,25 @@ levels(mower$Ownership)
 
 ```
 
+Because "nonowner" is first that means this will be the *base* or
+reference category. That is what we want, we want to treat the owners as
+"1's" and the "0's" as nonowners. Always check this ahead of time! If
+you need to change the levels you can use `relevel()`.
 
-Because "nonowner" is first that means this will be the _base_ or reference category.  That is what we want, we want to treat the owners as "1's" and the "0's" as nonowners.  Always check this ahead of time!  If you need to change the levels you can use `relevel()`.
-
-I'm going to treat this as if this is a big data set.  The syntax `~.` in the `glm()` means to include all of the other variables in the data frame except Ownership.  So I need to make sure all of other variables in the data frame are valid to include in the model.  I can do that by either (1) creating a subset of data or (2) indexing the data frame appropriately.
+I'm going to treat this as if this is a big data set. The syntax `~.` in
+the `glm()` means to include all of the other variables in the data
+frame except Ownership. So I need to make sure all of other variables in
+the data frame are valid to include in the model. I can do that by
+either (1) creating a subset of data or (2) indexing the data frame
+appropriately.
 
 ```{r}
 log.reg<-glm(Ownership~., data=mower[,-4], family="binomial") 
 summary(log.reg)
 ```
+
+-   Number of times that the model plugged in values for the
+    coefficients = fisher scoring iterations
 
 For this model we have the following equations:
 
@@ -212,7 +257,9 @@ $$\text{logit}(\hat{p})=ln(\frac{\hat{p}}{1-\hat{p}})=-25.9382 +0.1109*\text{Inc
 $$\hat{p}=\frac{1}{1+exp[-(-25.9382 +0.1109*\text{Income}+0.9638*\text{Lot_Size})]}$$
 $$\text{Odds}=\frac{\hat{p}}{1-\hat{p}}=exp[-25.9382 +0.1109*\text{Income}+0.9638*\text{Lot_Size}]$$
 
-Let's interpret the coefficient for Lot_Size=0.9638.  We could say that holding income constant, as Lot_Size increases by 1 unit the log odds increases by 0.9638.  But what does that mean?
+Let's interpret the coefficient for Lot_Size=0.9638. We could say that
+holding income constant, as Lot_Size increases by 1 unit the log odds
+increases by 0.9638. But what does that mean?
 
 Make this calculation: $exp(\beta_i)$.
 
@@ -221,41 +268,64 @@ exp( 0.9638 )
 
 ```
 
-The odds of owning a riding lawnmower increase by a factor of 2.62164 when Lot Size increases by one unit for a fixed income.
+**The odds of owning a riding lawnmower increase by a factor of 2.62164
+when Lot Size increases by one unit for a fixed income.**
 
-In general you can say, the odds of belonging to class "1" will change by a factor of $exp(\hat{\beta_i})$ when increasing $x_i$ by one unit, holding all other factors fixed.
+In general you can say, the odds of belonging to class "1" will change
+by a factor of $exp(\hat{\beta_i})$ when increasing $x_i$ by one unit,
+holding all other factors fixed.
 
 What does an odds of 1 mean?
 
-*
+-   That coefficient is not explaining anything (equally likely to
+    increase or decrease)
 
-
-Why can't we interpret these coefficients in terms of the probability?  Because the change in probability for a unit increase in a particular predictor variable is not constant.  It depends on the specific values of the other predictor variables. 
+Why can't we interpret these coefficients in terms of the probability?
+Because the change in probability for a unit increase in a particular
+predictor variable is not constant. It depends on the specific values of
+the other predictor variables.
 
 ### Evaluating a Logistic Regression Model
 
-As with linear regression we first want to evaluate the overall usefulness of the model prior to assessing individual parameter estimates.  The overall test for goodness of fit uses the Deviance statistics.  
+As with linear regression we first want to evaluate the overall
+usefulness of the model prior to assessing individual parameter
+estimates. The overall test for goodness of fit uses the Deviance
+statistics.
 
-In the output you see the Null deviance and Residual deviance.  The test is performed by comparing the deviance of our model (Residual deviance) to the deviance of the baseline (null model).  
+In the output you see the Null deviance and Residual deviance. The test
+is performed by comparing the deviance of our model (Residual deviance)
+to the deviance of the baseline (null model).
 
-If there is a significant difference between those two (as measured by a Chi-square statistic) then we can conclude our model is explaining more than the baseline model.
+If there is a significant difference between those two (as measured by a
+Chi-square statistic) then we can conclude our model is explaining more
+than the baseline model.
 
-Oddly, that test statistic and p-value is not shown in the `summary()` for `glm` and it needs to be "hand" calculated.
+Oddly, that test statistic and p-value is not shown in the `summary()`
+for `glm` and it needs to be "hand" calculated.
 
 ```{r}
 summary(log.reg)
 ```
 
-Code to get the p-value for the overall goodness of fit is below. 
+Code to get the p-value for the overall goodness of fit is below.
 
 ```{R}
 1-pchisq(33.271-15.323, 23-21)
 
 ```
 
-Since this test has a low p-value we know that this model is contributing to the prediction of riding lawnmower ownership.
+-   equivalent to the F-test (shows if the difference between deviances
+    is significant)
 
-You can also use the AUC to see how well the model is able to separate the 0's from the 1's.
+-   Null deviance: intercept only model (amount of info left over)
+
+-   Residual deviance: full model
+
+Since this test has a low p-value we know that this model is
+contributing to the prediction of riding lawnmower ownership.
+
+You can also use the AUC to see how well the model is able to separate
+the 0's from the 1's.
 
 ```{r}
 predictions<-predict(log.reg, type="response") #to get probabilities and not log(odds)
@@ -265,34 +335,37 @@ roc_object$auc
 
 ### Evaluating single predictors
 
-Similar to linear regression we then check to see if the individual predictors are contributing to the prediction of the repose.  Where the null and alternative hypotheses are 
+Similar to linear regression we then check to see if the individual
+predictors are contributing to the prediction of the repose. Where the
+null and alternative hypotheses are
 
-$$H_0: \beta_i=0$$
-$$H_a: \beta_i\neq 0$$
-Where the test statistic is: $$z=\frac{\hat{\beta_i}}{s_{\beta_i}}$$
+$$H_0: \beta_i=0$$ $$H_a: \beta_i\neq 0$$ Where the test statistic is:
+$$z=\frac{\hat{\beta_i}}{s_{\beta_i}}$$
 
-
-
-
-And the p-values are calculated using normal probabilities and regular p-value conventions.
+And the p-values are calculated using normal probabilities and regular
+p-value conventions.
 
 ### Interpreting Nominal Predictors
 
-Let's say I have a binary variable called "baldness" where 1=owner is bald and 0=owner still has hair.  That data is in "RidingMowers2.csv".
+Let's say I have a binary variable called "baldness" where 1=owner is
+bald and 0=owner still has hair. That data is in "RidingMowers2.csv".
 
 ```{r}
-mower1<-read.csv("RidingMowers2.csv", stringsAsFactors = TRUE)
+mower1<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/RidingMowers2.csv", stringsAsFactors = TRUE)
 mower1$Baldness<-as.factor(mower1$Baldness)
 log.reg1<-glm(Ownership~., data=mower1, family="binomial")
 summary(log.reg1)
 ```
 
-Notice that in the output the coefficient is listed as "Baldness1" meaning that the coefficient is for when Baldness=1. To interpret the coefficient for baldness we would first calculate:
+Notice that in the output the coefficient is listed as "Baldness1"
+meaning that the coefficient is for when Baldness=1. To interpret the
+coefficient for baldness we would first calculate:
 
 ```{R}
 exp( 3.12185)
 
 ```
 
-This means that if a person is bald the odds they own a riding lawn mower are 22.68831 times higher compared to someone who is not bald, for a given lot size and income.
-
+This means that if a person is bald the odds they own a riding lawn
+mower are 22.68831 times higher compared to someone who is not bald, for
+a given lot size and income.
