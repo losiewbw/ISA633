@@ -1,0 +1,69 @@
+---
+title: "Experiment Fun"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+We are doing some version of problem 2 on page 52 of the Lawson book.  You will need 20 sheets of printer paper, scissors and a ruler.  
+
+## Power
+
+Before beginning the experiment we will perform a power calculation for 5-8 replications.  We will estimate the helicopter flight variation with pilot tests in class.  State if 8 replications will be adequate or not.  We will perform 5 replications regardless :).
+
+```{r}
+
+
+```
+
+## Experiment
+
+Complete all parts a-j.  Use R to perform the analysis and for the randomization. Design the experiment in R and then export to a csv to take data, then import the data back into R. Do this all at one time, in one room.  This is an individual assignment.  So yes, you will be making 32 paper helicopters.  Answer the following questions.
+
+a. Describe the experimental unit.
+
+b. Explain the difference in replicates and duplicates (repeats) for this situation.
+
+c. Describe the treatment factor.
+
+d. Describe any lurking variables that might affect the results of experiments. 
+
+e. Explain why randomization would be important.
+
+f. Describe your measurement and your measurement process. 
+
+g. Create a randomized list of experiments for examining four wing lengths of (4", 4.75", 5.5", 6") with five replicate experiments in each level.  Show the code and your treatment combinations below.  I suggest writing your expeirment to a .csv and taking the data in Excel. Then importing the data back for analysis.
+
+```{r}
+
+
+```
+
+h. Carry out the experiment and collect data. 
+
+i. Perform an analysis of variance with your data. And state your conclusions.
+
+```{r}
+
+
+```
+
+
+j. Check the equal variance and normality assumptions with residual plots.  State your conclusions.
+
+```{r}
+
+```
