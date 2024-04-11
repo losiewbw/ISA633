@@ -1,0 +1,372 @@
+---
+title: "Factorial Designs"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1.  Understand the benefits of a factorial design vs. A/B or A/B/n test.
+
+2.  Know how to analyze a factorial design with binary and continuous factors.
+
+3.  Know how to use the final model to find the optimal experimental conditions.
+
+## Example
+
+A company whose sales are made online through a Web page would like to increase the proportion of visitors to their web site that sign up for their service by optimally configuring their web page. In order to buy from the company, customers must sign up and fill out a form supplying their e-mail address along with other required fields. Once a customer signs up, the company has contact information for their database and can e-mail advertisements, special offers, and so forth. The company would like to experiment by testing different configurations of their web page to see if they can increase the number of visitors to their site that actually sign up.
+
+The factors they wish study were those that change the website appearance.
+
+A: background alternatives with three options
+
+B: font size in the main banner with three sizes
+
+C: text color with two alternatives
+
+D: a choice between a sign-up button or link
+
+What is the response?
+
+-   Sign up or not
+
+-   
+
+What are their experimental options?
+
+-   Build different websites
+
+-   
+
+Why not vary all of the factors at once?
+
+If so then the company would make **3X3X2X2=36 different versions of the webpage**. And they would have to show each version to thousands of users, which seems like a disadvantage.
+
+But, here are the reasons this is a better plan than doing 4 separate A/B or A/B/n tests.
+
+1.  **Interactions**. What if a certain background alternative worked best with a certain main banner? And the combination actually produced more sign-ups than either option on its own. You could never figure that out with single factor testing.
+
+2.  **Hidden Replication**. Factional designs require less overall replications. In other words they have more power.
+
+![](Capture.png)
+
+### Creating a Factorial Plan
+
+This is relatively easy, we just need to produce all possible combinations of our factors.
+
+```{R}
+d<-expand.grid(Background=c("A", "B", "C"), Font=c(10, 12, 14), Color=c(1, 2), Signup=c("button", "link"))
+d
+```
+
+Can I had this someone to carry out the experiment? What needs to be done?
+
+-   
+
+-   
+
+```{r}
+
+
+
+```
+
+Here is the experiment:
+
+```{r}
+library(daewr)
+web<-web
+web
+
+```
+
+How are we going to analyze this experiment?
+
+-   
+
+What model are we going to fit?
+
+$$log(\frac{p_{ijk}}{1-p_{ijk}})=\mu+\alpha_i+\beta_j+\alpha\beta_{ij}+\gamma_k+\alpha\gamma_{ik}+\beta\gamma_{jk}+\alpha\beta\gamma_{ijk}+\delta_l+$$ $$\alpha\delta_{il}+\beta\delta_{jl}+\alpha\beta\delta_{ijl}+\beta\gamma\delta_{jkl}+\alpha\beta\gamma\delta_{ijkl}$$
+
+Let's list the degrees of freedom for each main effect:
+
+-   
+
+What will be the two-factor interactions in the model?
+
+-   
+
+What are their corresponding degrees of freedom?
+
+-   
+
+-   
+
+What will be the three-way interactions in the model?
+
+-   
+
+What will be their corresponding degrees of freedom?
+
+-   
+
+-   
+
+The web data is collapsed, summarized. The original response for each replicate was 1 or 0. So each observation is a Bernoulli trial and the aggregate response is binomial with large and approximately equal sample sizes.
+
+We have actual counts this time so we have to tell the `glm` function that. In the past we have had just 0/1 data as the response.
+
+Question: How many observations did the experimental data contain?
+
+-   
+
+-   
+
+Below is the same code we have used before.
+
+```{r}
+mod<-glm( cbind(signup, visitors-signup) ~ A * B * C * D, data = web, family = binomial )
+anova(mod, test="Chisq")
+```
+
+For these larger experiments, it is common to reduce the model (remove the terms that are not significant).
+
+When analyzing a model with interactions involved we must adhere to the principle of effect heredity when considering reducing the model.
+
+Consider the interactions to be "children" of the *main effects*. And you can't leave children unattended.
+
+In this case we have a significant three way interaction, so even if the main effects were not significant we would leave A, C, and D in the model. And we would also leave the two factor interactions between A, C, and D.
+
+Here is the reduced model:
+
+```{r}
+
+mod<-glm( cbind(signup, visitors-signup) ~ A * B * C * D-A:B:C:D-B:C:D-A:B:D-A:B:C-B:D-B:C-A:B, data = web, family = binomial )
+anova(mod, test="Chisq")
+```
+
+The **only** way to interpret this model is with an interaction plot. To use the `sjPlot` package and the `plot_model` function we fudge the model to get the plot we want. Notice below I re-fit the reduced model with A, C and D changed to numeric instead of factors. Note, the anova from this will be completely wrong!! But the plot is easier to read.
+
+```{r}
+web$A<-as.numeric(web$A)
+web$B<-as.numeric(web$B)
+web$C<-as.numeric(web$C)
+web$D<-as.numeric(web$D)
+mod<-glm( cbind(signup, visitors-signup) ~ A * B * C * D-A:B:C:D-B:C:D-A:B:D-A:B:C-B:D-B:C-A:B, data = web, family = binomial )
+library(sjPlot)
+plot_model(mod, type="int", axis.title = ("Proportion of Signups"), title="Predicted Probablities of visitor sign-ups")[[4]]
+```
+
+So what levels of A, C and D will give us the highest probability of sign ups?
+
+-   
+
+## Factorial Design: Continous response
+
+How do you think you would analyze a factorial design with a continuous response?
+
+-   
+
+How would you choose the optimal settings from a factorial design with a continuous response?
+
+-   
+
+### Example
+
+Walmart uses its tests store to try out new ideas. In a recent test, Walmart will build on an experimental checkout experience Walmart previously announced. During this experiment at its test stores, Walmart does away with individual checkout lanes, and transitions cashiers into the role of "hosts" in a new area of the store that resembles a self-checkout destination. Here, customers can opt to check out themselves or have a "host" offer full-service checkout. In either case, store staff are around to help with any issues that arise.
+
+![](Capture2.png)
+
+The data for there most recent experiment is contained in the file "Walmart.csv". They measured the average checkout time per day for each combination of stations and hosts.
+
+What is the response?
+
+-   
+
+What is are the factors?
+
+-   
+
+```{R}
+df<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\factorial design\\walmart.csv")
+head(df)
+```
+
+What should we do with test.store?
+
+-   
+
+Is this design replicated?
+
+-   
+
+Here is a graphical summary.
+
+```{r}
+par( mfrow = c(1,2))
+boxplot(time~stations, data=df)
+boxplot(time~hosts, data=df)
+```
+
+We treat the block just the same as we did before. Include it in the model and ignore the p-value. But now because we have 2 factors we can also include the interaction. We stick with the ANOVA here.
+
+```{R}
+df$stations<-as.factor(df$stations)
+df$hosts<-as.factor(df$hosts)
+df$test.store<-as.factor(df$test.store)
+mod<-aov(time~test.store+hosts+stations+hosts*stations, data=df)
+summary(mod)
+```
+
+Here is the plot from the `sjPlot` package. Its OK.
+
+```{r}
+
+library(sjPlot)
+plot_model(mod, type="int")
+
+```
+
+Here is one using base R, I like it better.
+
+```{R}
+par( mfrow = c(1,1))
+with(df, (interaction.plot(hosts, stations, time, type = "b",
+pch = c(18,24,22), leg.bty = "o",
+main = "Interaction plot Stations and Hosts",
+xlab = "Hosts",ylab = "Stations")))
+
+
+```
+
+Notice the blocking variable (1) is not included in any interaction and (2) it is not included in the interaction plot.
+
+what should you do next?
+
+-   
+
+-   
+
+## Python Code
+
+```{r}
+
+library(reticulate)
+
+```
+
+```{python}
+
+import pandas as pd
+
+web= pd.read_csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\factorial design\\web.csv")
+print(web)
+
+```
+
+```{python}
+
+import pandas as pd
+import statsmodels.api as sm
+from statsmodels.formula.api import glm
+from statsmodels.stats.anova import anova_lm
+
+# Assuming 'web' is your DataFrame and it contains 'signup', 'visitors', 'A', 'B', 'C', and 'D' columns.
+
+# Calculate the number of failures as visitors-signup
+web['failures'] = web['visitors'] - web['signup']
+
+# Defining the model: Generalized Linear Model with binomial family
+model_formula = 'signup + failures ~ A * B * C * D'
+mod = glm(formula=model_formula, data=web, family=sm.families.Binomial()).fit()
+
+
+
+
+
+
+```
+
+Python is not good for this....
+
+```{python}
+
+import statsmodels.api as sm
+from statsmodels.formula.api import glm
+from scipy.stats import chi2
+
+# Assuming 'web' is your DataFrame with necessary columns.
+
+# Full model
+full_model = glm(formula='signup + failures ~ A * B * C * D', data=web, family=sm.families.Binomial()).fit()
+
+# Sequentially reduced models and likelihood ratio tests
+terms = ['A', 'B', 'C', 'D'] # I guess you would have to list all of the terms here.
+for i in range(len(terms)):
+    # Reduced model formula by excluding one more term
+    reduced_formula = 'signup + failures ~ ' + ' * '.join(terms[:len(terms)-i])
+    reduced_model = glm(formula=reduced_formula, data=web, family=sm.families.Binomial()).fit()
+    
+    # Perform likelihood ratio test and print results
+    lr_stat = -2 * (reduced_model.llf - full_model.llf)  # likelihood ratio statistic
+    df = full_model.df_model - reduced_model.df_model  # degrees of freedom
+    p_value = chi2.sf(lr_stat, df)  # p-value using survival function (1-CDF) from chi2
+    
+    print(f"Model {i+1}: Reduced model excluding {' * '.join(terms[len(terms)-i:])}")
+    print(f"Chi-Square Statistic: {lr_stat}, p-value: {p_value}\n")
+
+
+
+
+```
+
+Interaction plot.
+
+```{python}
+
+# Create interaction plot for A and B
+
+import matplotlib.pyplot as plt
+from statsmodels.graphics.factorplots import interaction_plot
+
+fig = interaction_plot(x=web['A'], trace=web['B'], response=mod.fittedvalues,
+                       colors=['red', 'blue', 'green'], markers=['D', '^', 'v'], ms=10)
+
+plt.xlabel('A Levels')
+plt.ylabel('Signup Rate')
+plt.title('Interaction Plot for A and B')
+plt.show()
+
+web['fitted.values'] = mod.fittedvalues
+
+
+```
+
+This will create a three way interaction plot.
+
+```{python}
+import seaborn as sns
+sns.set_theme(style="whitegrid")
+
+g = sns.catplot(
+    data=web, x="A", y="fitted.values", hue="C", col="D",
+    capsize=.2, palette="YlGnBu_d", errorbar="se",
+    kind="point", height=6, aspect=.75,
+)
+g.despine(left=True)
+
+
+```

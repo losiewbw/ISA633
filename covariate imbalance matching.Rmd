@@ -1,0 +1,314 @@
+---
+title: "Dealing with Covariate Imbalance: Matching Designs"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1.  Be able to describe covariate imbalance.
+
+2.  Know why covariate imbalance is a problem.
+
+3.  Understand why blocking will not solve this problem.
+
+4.  Understand why randomization might not be the solution in small samples.
+
+5.  Understand how to use re-randomization and when this appropriate.
+
+6.  After doing the homework, understand propensity matching.
+
+7.  Understand the concept of optimal matching.
+
+Large samples make statistical analysis easy, but we do not always have the luxury of a large samples and small samples have particular difficulties of their own.
+
+-   **Example:** Suppose a financial firm offers free consultations to select customers as part of a cross-sell program. Each consultation costs \$300 in resources: employee time, marketing materials, follow-up efforts, etc. The budget of the project is \$12,000 which means forty customers can get the free consultation. Forty customers are randomly selected from the customer list. Twenty are randomly assigned to receive treatment A and 20 to receive treatment B. The experiment show that the treatment A was given to 14 longtime customers and 6 newer customers, while treatment B was given to 9 longtime customers and 11 newer customers. Question: Did the statistical test show that A is preferred because A is better, or because longtime customers are more likely to choose A than B?
+
+-   We can't tell
+
+-   
+
+-   **Example:** Imagine that you have to decide whether remodeling will increase sales at a chain of convenience stores. Each remolded costs \$100,000 and your budget for the test is \$800,000. Sixteen stores are chosen randomly, eight of which are modeled. The results show that the remodel generates increased sales. A subsequent analysis shows that of the eight remodeled stores, six are close to competitors. Question: Should the remodel be rolled out to all stores or only to stores that are near competitors?
+
+-   We don't know
+
+-   
+
+## Covariate Imbalance
+
+In both cases above we have encountered what is called *covariate imbalance*.
+
+If the covariate has an effect on the response and the covariate is not (nearly) equally represented in the treatment and the control groups, then the experiment is said to suffer from covariate imbalance. This **increases the error variance and makes it harder to detect effects**.
+
+Let's examine that statement further with a marketing data from a bank. This data set contains 45,211 observations on nine variables for customers who were sent a loan offer. Let's pretend this is our "population" and examine sample statistics from different size samples. We will only example 3 of the potential covariates, Amount=amount in account, Loan=personal loan or not, Housing=mortgage or not.
+
+Here are the population stats:
+
+```{r}
+library(tidyverse)
+
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/BankData.csv")
+
+df %>% summarize("amount mean"=mean(amount), "amount sd"=sd(amount))
+```
+
+-   population average
+
+```{r}
+df %>% count(loan) %>% mutate(prop=prop.table(n))
+```
+
+-   true proportion of those who have a personal loan
+
+```{r}
+df %>% count(housing) %>% mutate(prop=prop.table(n))
+```
+
+-   true proportion of those who have a housing loan
+
+Let's take two samples, control and treatment, and we calculate the sample statistics and see how they compare. We will increase the sample size and see what happens.
+
+Before we do this, given that we are randomly sampling, what do we expect to see from the sample statistics for the control and treatment groups?
+
+-   the sample statistic should be very similar to the population statistic
+
+-   
+
+How should the sample statistics from the control and treatment groups compare to the population sample statistics?
+
+-   the sample statistic for the control and treatment groups should also be similar
+
+-   
+
+Below I have taking different sample sizes representing either the control or the treatment groups. Then I compared the average amount in the bank account, the proportion of people who have a personal loan, and the proportion of people who have a housing loan for each sample size in the control and treatment groups.
+
+```{r}
+size<-c(10, 30, 100, 250, 500, 1000, 2000, 4000, 8000)
+control.amount<-c()
+control.loan<-c()
+control.housing<-c()
+treat.amount<-c()
+treat.loan<-c()
+treat.housing<-c()
+for (i in 1:length(size)){
+  
+  control.index<-sample(1:nrow(df), size=size[i])
+  s<-df[control.index, ]
+  control.amount[i]<-mean(s$amount)
+   if(table(s$loan)[2]==0){
+    control.loan[i]=0
+  } else {
+  control.loan[i]<-table(s$loan)[2]/sum(table(s$loan))
+  }
+  if(s$housing[2]==0){
+    control.housing[i]=0
+  } else {
+  control.housing[i]<-table(s$housing)[2]/sum(table(s$housing))
+  }
+  
+  treat.index<-sample(1:nrow(df[-control.index,]), size=size[i])
+  dfc<-df[-control.index,]
+  s<-dfc[treat.index, ]
+  treat.amount[i]<-mean(s$amount)
+  if(table(s$loan)[2]==0){
+    treat.loan[i]=0
+  } else {
+  treat.loan[i]<-table(s$loan)[2]/sum(table(s$loan))
+  }
+  if(s$housing[2]==0){
+    treat.housing[i]=0
+  } else {
+  treat.housing[i]<-table(s$housing)[2]/sum(table(s$housing))
+  }
+}
+
+control<-data.frame(size, amount=control.amount, loan=control.loan, housing=control.housing)
+
+control
+
+treatment<-data.frame(size, amount=treat.amount, loan=treat.loan, housing=treat.housing)
+
+treatment
+  
+
+
+
+```
+
+-   
+
+```{r, echo=FALSE}
+
+res<-rbind(control, treatment)
+
+res$type<-c(rep("control",nrow(control)), rep("treamtment", nrow(treatment)))
+
+ggplot(res, aes(x=size, y=amount, group=type, color=type))+
+  geom_line(size=1)+
+  geom_hline(yintercept=mean(df$amount),linetype="dashed")+
+  theme_bw()+xlab("sample size")+ylab("average amount in account")+
+  theme(legend.title=element_blank())
+
+
+```
+
+```{r, echo=FALSE}
+
+
+ggplot(res, aes(x=size, y=loan, group=type, color=type))+
+  geom_line(size=1)+
+  geom_hline(yintercept=(table(df$loan)[2]/sum(table(df$loan))),linetype="dashed")+
+  theme_bw()+xlab("sample size")+ylab("proportion of personal loan=yes")+
+  theme(legend.title=element_blank())
+
+```
+
+```{r, echo=FALSE}
+
+
+ggplot(res, aes(x=size, y=housing, group=type, color=type))+
+  geom_line(size=1)+
+  geom_hline(yintercept=(table(df$housing)[2]/sum(table(df$housing))),linetype="dashed")+
+  theme_bw()+xlab("sample size")+ylab("proportion of personal loan=yes")+
+  theme(legend.title=element_blank())
+
+```
+
+### Random Sampling
+
+**A random sample is not going to protect us from covariate imbalance.**
+
+Should we be unfortunate enough to get a random sample with severe covariate imbalance it can adversely affect our results. This is not a failure of the random number generator.
+
+Imbalance is going to happen if the number of covariates is large enough. We can calculate this.
+
+Suppose we were to conduct a two-sample test of means to make sure the control and treatment means were approximately the same. **With 10 covariates, what is the probability of having at least one type I error?**
+
+Some people advocate for testing for covariate imbalance and then trying to correct for it. This is a mistake. A prognostic variable cannot be correct after the fact, because that is multiple testing.
+
+### Blocking
+
+OK, so why don't we just block?
+
+First, blocking as a strategy for inducing covariate balance requires knowing in advance that covariate might cause the imbalance.
+
+Second, you can't block on every covariate or even many covariates--you will run out of df.
+
+The way to avoid covariate imbalance is to take **preventative action** and use a matched design.
+
+But this is only a concern if the sample size is small, when the sample size is large the covariate imbalance is probably negligible.
+
+## Matching
+
+We have seen that using a within-subject experiment reduces the variation (see paired testing notes).
+
+We will do the same thing here.
+
+Here is some proof for you.
+
+Assume we have an experiment comparing a control and treatment with $n_1$=$n_2$=$n$ observations in each group. **Let** $X$ **be a baseline covariate** (a baseline covariate is a variable that is measured or observed before the experiment begins). Let $Y$ be the outcome of interest and $\sigma^2$ be the conditional variance of $Y$ given $X$.
+
+We define $\tau$ as the treatment effect and $t$ **is an indicator variable with** $t=1/2$ **in the treatment group and** $t=-1/2$ **in the control group.**
+
+We will define $x=X-\bar{X}$ and we can show that the variance of the treatment effect is:
+
+$$ Var(\tau)=\frac{2\sigma^2}{n} \frac{\sum x^2}{\sum x^2-2(\sum tx)^2/n}$$
+
+-   We will have more power to detect effects when covariates are balanced
+
+The first fraction in the equation above is due to $X$ affecting $Y$. The second fraction depends on the actual values assumed by $X$.
+
+When the covariates are perfectly balanced between treatment and control then $( \sum tx)^2$=0. Then that entire second term equal 1 and $Var(\tau)$ is minimized.
+
+Having covariate balance *reduces the variance of the estimate of the treatment effect*.
+
+Matching is a special case of *blocking when the size of the block is 2.*
+
+## Examples
+
+Let's return to the examples.
+
+Financial Example:
+
+-   match long term customers and match short term customers
+
+-   
+
+Renovation Example:
+
+-   match sites close to a competitor
+
+-   
+
+This form of matching can only accommodate one or two relevant covariates.
+
+When we have one binary covariate there are 2 strata. With 2 there are 4, and 4 there are 16 strata and 8 covariates, 256 strata. If we need many observations in each, we have a problem.
+
+What if you have continuous covariates? Then how to do you match?
+
+[The more variables you match on the harder it is to get a match.]{.underline} (open research question)
+
+There are many sophisticated methods for matching, these notes will cover just a few.
+
+## Re-randomization
+
+OK, so this isn't exactly matching, but it has the same goal.
+
+Suppose we have a population of $N$=100 consisting of 50 men and 50 women. We draw a sample of $n$=60 randomly. If the sample does not have exactly 30 men and 30 women we reject the sample and redraw, continuing until we get a sample with exactly 30 men and 30 women.
+
+This might be controversial to some statistician (I cringed a bit myself) but as long as the experiment *has not been carried out* then it is probably fine.
+
+## Propensity Score
+
+Propensity scoring involves fitting a model (regression, logistic regression, machine learning) using all of the given covariates available and using the predicted values from the model (probabilities or predicted values) to match cases.
+
+-   This technique relies on the quality of the model
+
+You will work through this in your homework :).
+
+## Optimal Matching
+
+Suppose you had eight observations on age: 24, 35, 39, 40, 40, 41, 45, 56
+
+How would you match these?
+
+-   40 \<\--\> 41
+
+-   45 \<\--\> 56
+
+-   39 \<\--\> 40
+
+-   24 \<\--\> 35
+
+-   Summation of the total abs differences
+
+Compute the total absolute difference of your matched pairs.
+
+An optimal match would minimize the total absolute difference between the matched pairs.
+
+This approach can be used to match on many covariates, say 20. But as the number increases, the computational burden increases as well.
+
+## Matching Wrap Up
+
+Matching is not a solved problem. There are many ways to match, and we don't know which way is best. But even if the matching isn't perfect, imperfect matching is better than no matching at all.
+
+Downside of matching: It is often hard to explain to managers how matching helps. And of course you will probably get the question, "Is this the best way to match?"
+
+Your answer would be "No, because no body knows the best way to match."
+
+Your best bet is to be able to [explain the deleterious effect of covariate imbalance]{.underline} and suggest matching is better than no matching.
+
+-   Often viewed as a causal inference method

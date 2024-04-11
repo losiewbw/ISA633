@@ -25,9 +25,18 @@ We are doing some version of problem 2 on page 52 of the Lawson book.  You will 
 Before beginning the experiment we will perform a power calculation for 5-8 replications.  We will estimate the helicopter flight variation with pilot tests in class.  State if 8 replications will be adequate or not.  We will perform 5 replications regardless :).
 
 ```{r}
-
-
+library(daewr)
+rmin<-5 #smallest number of replicates considered
+rmax<-8 #largest number of replicates considered
+alpha <- rep(0.05, rmax - rmin +1)
+sigma <-sqrt(0.2241352)
+nlev <- 4
+nreps <- rmin:rmax
+Delta <- 1
+power <- Fpower1(alpha,nlev,nreps,Delta,sigma)
+power
 ```
+8 replicates is adequate because it achieves a power of .92
 
 ## Experiment
 
@@ -35,35 +44,84 @@ Complete all parts a-j.  Use R to perform the analysis and for the randomization
 
 a. Describe the experimental unit.
 
+The paper helicopter is the experimental unit.
+
 b. Explain the difference in replicates and duplicates (repeats) for this situation.
+
+A duplicate would be dropping the same helicopter more than once, and a replicate would be recreating all the helicopters at each treatment level.
 
 c. Describe the treatment factor.
 
+The treatment factor is the wing length.
+
 d. Describe any lurking variables that might affect the results of experiments. 
+
+* The height from where it was dropped
+* Airflow in the room could affect the helicopters (from AC/Heat etc.)
 
 e. Explain why randomization would be important.
 
+It eliminates random errors
+
 f. Describe your measurement and your measurement process. 
+
+* Phone timer started when dropped 
+
+* **Complete Randomized Design is the ideal experiment**
 
 g. Create a randomized list of experiments for examining four wing lengths of (4", 4.75", 5.5", 6") with five replicate experiments in each level.  Show the code and your treatment combinations below.  I suggest writing your expeirment to a .csv and taking the data in Excel. Then importing the data back for analysis.
 
 ```{r}
-
-
+df = read.csv('flight.csv')
+head(df)
 ```
+```{r}
+sd(df$Time.to.Fall)
+```
+
 
 h. Carry out the experiment and collect data. 
 
 i. Perform an analysis of variance with your data. And state your conclusions.
 
 ```{r}
+df$Wing.Length = as.factor(df$Wing.Length)
 
-
+mod = aov(Time.to.Fall~Wing.Length, data = df)
+summary(mod)
+```
+```{r}
+library(multcomp)
+tukey<-glht(mod, linfct=mcp(Wing.Length="Tukey"))
+summary(tukey)
+plot(tukey)
 ```
 
+We found a significant difference between at least one of the wing lengths in our ANOVA test, so we followed up with a Tukey analysis. The Tukey analysis revealed that there a significant difference between a wing length of 6 and 4, with 6 taking longer. That being said, we cannot outright recommend a six inch wing length, as there was not significant difference between the other wing lengths. Thus, we would recommend conducting more replicates of the experiment to determine which wing length there is.
 
 j. Check the equal variance and normality assumptions with residual plots.  State your conclusions.
 
 ```{r}
-
+par( mfrow = c(2,2) )
+plot(mod, which=5)
+plot(mod, which=1)
+plot(mod, which=2)
+plot(residuals(mod) ~ Wing.Length, main="Residuals vs Exp. Unit", font.main=1,data=df)
+abline(h = 0, lty = 2)
 ```
+```{r}
+df$Wing.Length = as.factor(df$Wing.Length)
+
+mod = aov(log(Time.to.Fall)~Wing.Length, data = df)
+summary(mod)
+```
+
+```{r}
+par( mfrow = c(2,2) )
+plot(mod, which=5)
+plot(mod, which=1)
+plot(mod, which=2)
+plot(residuals(mod) ~ Wing.Length, main="Residuals vs Exp. Unit", font.main=1,data=df)
+abline(h = 0, lty = 2)
+```
+Based off our analysis of the assumption plots, our conclusion is that there some issues in the constancy of the variance.
