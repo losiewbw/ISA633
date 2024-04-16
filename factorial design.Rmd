@@ -29,6 +29,8 @@ knitr::opts_chunk$set(echo = TRUE,
 
 A company whose sales are made online through a Web page would like to increase the proportion of visitors to their web site that sign up for their service by optimally configuring their web page. In order to buy from the company, customers must sign up and fill out a form supplying their e-mail address along with other required fields. Once a customer signs up, the company has contact information for their database and can e-mail advertisements, special offers, and so forth. The company would like to experiment by testing different configurations of their web page to see if they can increase the number of visitors to their site that actually sign up.
 
+-   Binary response = logistic regression
+
 The factors they wish study were those that change the website appearance.
 
 A: background alternatives with three options
@@ -57,13 +59,15 @@ If so then the company would make **3X3X2X2=36 different versions of the webpage
 
 But, here are the reasons this is a better plan than doing 4 separate A/B or A/B/n tests.
 
-1.  **Interactions**. What if a certain background alternative worked best with a certain main banner? And the combination actually produced more sign-ups than either option on its own. You could never figure that out with single factor testing.
+1.  **Interactions**. What if a [certain background alternative worked best with a certain main banner]{.underline}? And the combination actually produced more sign-ups than either option on its own. You could never figure that out with single factor testing.
 
-2.  **Hidden Replication**. Factional designs require less overall replications. In other words they have more power.
+2.  **Hidden Replication**. Factorial designs require less overall replications. In other words they have more power.
 
-![](Capture.png)
+![](images/Screenshot%202024-04-16%20132753.png)
 
 ### Creating a Factorial Plan
+
+-   All possible combinations of all of the factors
 
 This is relatively easy, we just need to produce all possible combinations of our factors.
 
@@ -72,17 +76,9 @@ d<-expand.grid(Background=c("A", "B", "C"), Font=c(10, 12, 14), Color=c(1, 2), S
 d
 ```
 
-Can I had this someone to carry out the experiment? What needs to be done?
+Can I hand this to someone to carry out the experiment? What needs to be done?
 
--   
-
--   
-
-```{r}
-
-
-
-```
+-   No, the combinations are not randomized
 
 Here is the experiment:
 
@@ -93,31 +89,51 @@ web
 
 ```
 
+-   The number of signups is still binary, just collapsed so it sums all of the 1s (signups)
+
 How are we going to analyze this experiment?
 
--   
+-   Logistic Regression
 
 What model are we going to fit?
 
 $$log(\frac{p_{ijk}}{1-p_{ijk}})=\mu+\alpha_i+\beta_j+\alpha\beta_{ij}+\gamma_k+\alpha\gamma_{ik}+\beta\gamma_{jk}+\alpha\beta\gamma_{ijk}+\delta_l+$$ $$\alpha\delta_{il}+\beta\delta_{jl}+\alpha\beta\delta_{ijl}+\beta\gamma\delta_{jkl}+\alpha\beta\gamma\delta_{ijkl}$$
 
+$$\alpha = Background Color$$
+
+$$\beta = Font$$
+
+$$\gamma = text color$$
+
+$$\sigma = sign up$$
+
+-   Linear effects (Main Effects), 2 factor interactions, 3 factor interactions, and 4-way interactions
+
 Let's list the degrees of freedom for each main effect:
 
--   
+-   Background = 2
+
+-   Font size = 2
+
+-   Text color = 1
+
+-   Button = 1
 
 What will be the two-factor interactions in the model?
 
--   
+-   Background x Font Size
+
+-   Text Color x Button
 
 What are their corresponding degrees of freedom?
 
--   
+-   2 x 2 = 4
 
--   
+-   1 x 1 = 1
 
 What will be the three-way interactions in the model?
 
--   
+-   Backgorund x Font Size x Text Color = 2 x 2 x 1 = 4
 
 What will be their corresponding degrees of freedom?
 
@@ -131,7 +147,7 @@ We have actual counts this time so we have to tell the `glm` function that. In t
 
 Question: How many observations did the experimental data contain?
 
--   
+-   sum of the visitors column
 
 -   
 
@@ -142,7 +158,13 @@ mod<-glm( cbind(signup, visitors-signup) ~ A * B * C * D, data = web, family = b
 anova(mod, test="Chisq")
 ```
 
+-   cbind(success - failures)
+
+-   A \* B \* C \* D = fits all main effects and all possible interactions
+
 For these larger experiments, it is common to reduce the model (remove the terms that are not significant).
+
+-   A reduced model gives better standard error on predictions
 
 When analyzing a model with interactions involved we must adhere to the principle of effect heredity when considering reducing the model.
 
@@ -172,46 +194,59 @@ plot_model(mod, type="int", axis.title = ("Proportion of Signups"), title="Predi
 
 So what levels of A, C and D will give us the highest probability of sign ups?
 
--   
+-   A=1, D=2, C=2
+
+```{r}
+plot_model(model = mod)
+```
 
 ## Factorial Design: Continous response
 
 How do you think you would analyze a factorial design with a continuous response?
 
--   
+-   Anova
 
 How would you choose the optimal settings from a factorial design with a continuous response?
 
--   
+-   Interaction plot
+-   [Make sure you check your assumptions]{.underline}
 
 ### Example
 
 Walmart uses its tests store to try out new ideas. In a recent test, Walmart will build on an experimental checkout experience Walmart previously announced. During this experiment at its test stores, Walmart does away with individual checkout lanes, and transitions cashiers into the role of "hosts" in a new area of the store that resembles a self-checkout destination. Here, customers can opt to check out themselves or have a "host" offer full-service checkout. In either case, store staff are around to help with any issues that arise.
 
-![](Capture2.png)
-
 The data for there most recent experiment is contained in the file "Walmart.csv". They measured the average checkout time per day for each combination of stations and hosts.
 
 What is the response?
 
--   
+-   Check out time
 
 What is are the factors?
 
--   
+-   Stations and hosts
+
+-   Station: 2 level factor - 10 or 15
+
+-   Hosts: 3 level factor - 1, 2, of 4
 
 ```{R}
-df<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\factorial design\\walmart.csv")
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/walmart.csv")
 head(df)
 ```
 
+-   Largest model = station + host + (station x host)
+
+-   This is a randomized complete block design
+
+    -   Within each store we have a full factorial
+
 What should we do with test.store?
 
--   
+-   Block
 
 Is this design replicated?
 
--   
+-   Yes, 3 replicates in each store
 
 Here is a graphical summary.
 
@@ -231,6 +266,12 @@ mod<-aov(time~test.store+hosts+stations+hosts*stations, data=df)
 summary(mod)
 ```
 
+-   Why can we never take out test store?
+
+    -   We need the sum of squares out of the MSE
+
+    -   Doesn't matter if blocking variable is not significant
+
 Here is the plot from the `sjPlot` package. Its OK.
 
 ```{r}
@@ -247,7 +288,7 @@ par( mfrow = c(1,1))
 with(df, (interaction.plot(hosts, stations, time, type = "b",
 pch = c(18,24,22), leg.bty = "o",
 main = "Interaction plot Stations and Hosts",
-xlab = "Hosts",ylab = "Stations")))
+xlab = "Hosts",ylab = "Time")))
 
 
 ```
@@ -257,116 +298,3 @@ Notice the blocking variable (1) is not included in any interaction and (2) it i
 what should you do next?
 
 -   
-
--   
-
-## Python Code
-
-```{r}
-
-library(reticulate)
-
-```
-
-```{python}
-
-import pandas as pd
-
-web= pd.read_csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\factorial design\\web.csv")
-print(web)
-
-```
-
-```{python}
-
-import pandas as pd
-import statsmodels.api as sm
-from statsmodels.formula.api import glm
-from statsmodels.stats.anova import anova_lm
-
-# Assuming 'web' is your DataFrame and it contains 'signup', 'visitors', 'A', 'B', 'C', and 'D' columns.
-
-# Calculate the number of failures as visitors-signup
-web['failures'] = web['visitors'] - web['signup']
-
-# Defining the model: Generalized Linear Model with binomial family
-model_formula = 'signup + failures ~ A * B * C * D'
-mod = glm(formula=model_formula, data=web, family=sm.families.Binomial()).fit()
-
-
-
-
-
-
-```
-
-Python is not good for this....
-
-```{python}
-
-import statsmodels.api as sm
-from statsmodels.formula.api import glm
-from scipy.stats import chi2
-
-# Assuming 'web' is your DataFrame with necessary columns.
-
-# Full model
-full_model = glm(formula='signup + failures ~ A * B * C * D', data=web, family=sm.families.Binomial()).fit()
-
-# Sequentially reduced models and likelihood ratio tests
-terms = ['A', 'B', 'C', 'D'] # I guess you would have to list all of the terms here.
-for i in range(len(terms)):
-    # Reduced model formula by excluding one more term
-    reduced_formula = 'signup + failures ~ ' + ' * '.join(terms[:len(terms)-i])
-    reduced_model = glm(formula=reduced_formula, data=web, family=sm.families.Binomial()).fit()
-    
-    # Perform likelihood ratio test and print results
-    lr_stat = -2 * (reduced_model.llf - full_model.llf)  # likelihood ratio statistic
-    df = full_model.df_model - reduced_model.df_model  # degrees of freedom
-    p_value = chi2.sf(lr_stat, df)  # p-value using survival function (1-CDF) from chi2
-    
-    print(f"Model {i+1}: Reduced model excluding {' * '.join(terms[len(terms)-i:])}")
-    print(f"Chi-Square Statistic: {lr_stat}, p-value: {p_value}\n")
-
-
-
-
-```
-
-Interaction plot.
-
-```{python}
-
-# Create interaction plot for A and B
-
-import matplotlib.pyplot as plt
-from statsmodels.graphics.factorplots import interaction_plot
-
-fig = interaction_plot(x=web['A'], trace=web['B'], response=mod.fittedvalues,
-                       colors=['red', 'blue', 'green'], markers=['D', '^', 'v'], ms=10)
-
-plt.xlabel('A Levels')
-plt.ylabel('Signup Rate')
-plt.title('Interaction Plot for A and B')
-plt.show()
-
-web['fitted.values'] = mod.fittedvalues
-
-
-```
-
-This will create a three way interaction plot.
-
-```{python}
-import seaborn as sns
-sns.set_theme(style="whitegrid")
-
-g = sns.catplot(
-    data=web, x="A", y="fitted.values", hue="C", col="D",
-    capsize=.2, palette="YlGnBu_d", errorbar="se",
-    kind="point", height=6, aspect=.75,
-)
-g.despine(left=True)
-
-
-```

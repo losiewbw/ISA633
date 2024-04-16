@@ -1,0 +1,349 @@
+---
+title: "Two Level Factorial Designs"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Topics Covered
+
+1.  Know why are factorials not practical for a large number of factors.
+
+2.  Know why we use two level factors.
+
+3.  Know why we code those two levels as +1 and -1.
+
+4.  Know how to analyze a two-level design with a continuous and binary response.
+
+5.  Know the shortcut power calculation for continuous response.
+
+6.  Know how to recommend the optimal settings from a two-level factorial design.
+
+## Two-level Factorials
+
+What if we used five factors in the web experiment, where the fifth factor had three levels? How many treatment combinations would be required for a full factorial?
+
+-   3,3,2,2
+
+```{r}
+3*3*2*3*2
+```
+
+The solution is not to drop *factors* from the experiment, but drop *levels* from the factors. How many treatment combinations would be required if we have 5 factors each at two levels?
+
+```{r}
+2*2*2*2*2
+```
+
+**A shorthand notation for a two-level factorial with k factors is a** $2^k$ **factorial design.**
+
+In two-level factorials, if a factor has quantitative levels the two levels are denoted symbolically by (-1) and (+1) where (-1) represents the lowest level the experimenter would consider and (+1) represents the highest level the experimenter would consider.
+
+**The high and low are spread out as a far as possible in order to accentuate the signal or difference in response between the two levels.**
+
+-   This dictates the effect size you are trying to detect
+
+If a factor has qualitative levels, the (-1) and (+1) designations are arbitrary, but the two levels chosen normally would be two that the experimenter believe should result in the maximum difference in response.
+
+## Main effects and Regression Slopes
+
+The model for a factorial experiment with three factors can be written as:
+
+$$y_{ijkl}=\mu+\alpha_i+\beta_j+\gamma_k+\alpha\beta_{ij}+\alpha\gamma_{ik}+\beta\gamma_{jk}+\alpha\beta\gamma_{ijk}+\epsilon_{ijkl} $$
+
+In a two-level factorial design, the indexes in the above equation can be replaced with a (-) or a (+).
+
+If this is the case then $\alpha_{-}=-\alpha_{+}$.
+
+And $\alpha_{-}= \bar{y}_{-...}-\bar{y}_{....}$ and $\alpha_{+}= \bar{y}_{+...}-\bar{y}_{....}$ and $\bar{y}_{....}=\frac{\bar{y}_{+...}+\bar{y}_{-...}}{2}$.
+
+$$\bar{y}$$ = average where alpha is at its highest level
+
+And this works for the rest of the main effects and the interaction effects as well.
+
+Because the two effects for each factor are the same value with different signs we can define the main effects for a two-level factorial as $E_A=\bar{y}_{+...}-\bar{y}_{-...}$ or **the change in the average response caused by a change in the factor from its low (-) level to its high (+) level.**
+
+Recall, a regression slope $\beta_A$ is the defined as the change in the average response when a one-unit change is made in A. In this case one "unit" is moving from 0 to +1 (since we have our factor levels coded).
+
+The slope $\beta_A$ is just one half the effect, $E_{A}$. Or just the difference in the high-low averages divided by two. $E_{A}$ = Main Effect
+
+![](images/Screenshot 2024-04-16 142930.png)
+
+Here is a geometric representation of a $2^3$ factorial design.
+
+![](images/Screenshot 2024-04-16 142952.png)
+
+### Interactions
+
+When all the factors have only two levels, the AB interaction effect is defined as one-half the difference in the simple effect of factor A when factor B is held constant at its high level and the simple effect of factor A when factor B is held constant at its low level.
+
+![](Capture10.png)
+
+![](Capture8.png) \### Regression Analysis
+
+Typically we calculate the effects using `lm()` (or regression analysis in another package) on the *coded experimental design*. It probably better (or easier) to think of the model for a two-level factorial design using the familiar regression equation.
+
+$$y=\beta_0+\beta_A X_A+\beta_B X_B+\beta_CX_C+\beta_{AB}X_AX_B+\beta_CX_C+\beta_{AC}X_AX_C+\beta_{CB}X_BX_C+\beta_{ABC}X_AX_BX_C+\epsilon $$ where the $\beta s$ are one-half of the effects and $X_A$-=1 if factor A is at the low level and $X_A$=+1 if factor A is at its high level.
+
+We have thrown around the term "orthogonal" but let me show you what it means that a design is orthogonal. Run this code and look at the output:
+
+```{r, eval=FALSE}
+library(daewr)
+chem
+X<-model.matrix(y~(.)^4, data=chem)
+t(X)%*%X
+```
+
+It is possible to perform an analysis in "real units" but not preferable. Performing an analysis in coded units has the following advantages:
+
+-   The coded units are dimensionless and the measure the effect of changing each design factor over a one-unit interval.
+
+-   The model coefficients will be directly comparable.
+
+-   The model coefficients are all estimated with the same precision (the standard error is the same for all of them).
+
+-   They are always orthogonal.
+
+To convert real units to +1 and -1 units:
+
+$$X=\frac{ActualFactorSetting-midpoint}{1/2*(max(ActualFactorSetting)-min(ActualFactorSetting))} $$
+
+The coded design above has several interesting properties:
+
+-   Every column has an equal number of + and - signs.
+
+-   The sum of the products of the signs in any two columns is zero. And the full model matrix also has those properties.
+
+-   The product of any two columns yields a column in the table $A\times B=AB$ and $AB \times B=AB^2=A$
+
+## Example of a $2^4$ Factorial
+
+Numerous small vendors push carts and sell food to tourists in Washington, DC, especially near The Mall. At one of The Mall is the Lincoln Memorial, at the other end is the Capital Building. A man owns several of these carts and deploys them at either end of the The Mall. He wants to maximize his profits and so conducts an experiment. The levels of the factors are given below.
+
+![](Capture2.png)
+
+The data file "HotDogCarts.csv" contains the data for this design with replications.
+
+```{r}
+df<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\two level factorial design\\HotDogCarts.csv")
+
+```
+
+How many replicates does this design contain?
+
+-   
+
+```{R, echo=FALSE}
+
+library(knitr)
+library(kableExtra)
+knitr::kable(df) %>% 
+  kable_styling(full_width=F)
+```
+
+First we need to get the data in the correct format.
+
+```{r}
+library(tidyverse)
+df_long <- df %>% pivot_longer(starts_with("y"),
+                               names_to = "replicate",
+                               values_to = "profits")
+
+```
+
+Then let's get an idea of what factors seem to be important.
+
+```{R}
+par( mfrow = c(2,2) )
+boxplot(profits~A, data=df_long)
+boxplot(profits~B, data=df_long)
+boxplot(profits~C, data=df_long)
+boxplot(profits~D, data=df_long)
+```
+
+The next step is to fit the full regression model. Note, even though A, B, C, and D are technically factors we need to keep them coded as numeric in r. This will give us the correct effect estimates we are after (see above).
+
+-   As an aside, what will the effect estimates be if we code them as factors?
+
+-   
+
+-   
+
+1.  First We fit the full model. This is a full factorial so we can estimate the largest interaction.
+
+```{R}
+reg<-lm(profits~A*B*C*D, data=df_long)
+summary(reg)
+
+
+```
+
+2.  Then we systematically reduce the model starting with the highest-order terms first. Remove the four-way interaction.
+
+```{r}
+reg<-lm(profits~A*B*C*D-A:B:C:D, data=df_long)
+summary(reg)
+
+```
+
+This is all we can reduce because the highest order interactions are all significant. Let's look at some interaction plots.
+
+```{r}
+library(sjPlot)
+
+plots<-plot_model(reg, type="int")
+plots[[7]]
+plots[[8]]
+plots[[9]]
+plots[[10]]
+
+```
+
+And check assumptions.
+
+```{r}
+par( mfrow = c(1,2))
+plot(reg, which=1)
+plot(reg, which=2)
+```
+
+```{r}
+par( mfrow = c(2,2) )
+plot(residuals(reg) ~ A, main="Residuals vs Exp. Unit", font.main=1,data=df_long)
+plot(residuals(reg) ~ B, main="Residuals vs Exp. Unit", font.main=1,data=df_long)
+plot(residuals(reg) ~ C, main="Residuals vs Exp. Unit", font.main=1,data=df_long)
+plot(residuals(reg) ~ D, main="Residuals vs Exp. Unit", font.main=1,data=df_long)
+```
+
+## General Steps for Analysis of a $2^k$ Design
+
+1.  Estimate the factor effects from initial full regression model
+
+2.  Perform statistical testing
+
+3.  Refine the model
+
+4.  Analyze residuals
+
+5.  Interpret results--use plots
+
+## Shortcut Power Calculation for Continuous Responses
+
+In a two-level factorial design you can calculate the number of runs necessary to achieve power equal to 0.95 when the significance level for a two-level factorial is $\alpha=0.05$ using
+
+$$ N=(\frac{8\sigma}{\Delta})^2 $$
+
+Example: For the hot dog cart example above, let's assume that $\sigma=\$64$ and you wish to detect a profit difference of \$100,
+
+```{r}
+(8*64/100)^2
+
+```
+
+So there needs to be r=2 replicates of the $2^4$ design for these parameters to achieve 0.95 power.
+
+You can also use this formula (and algebra) to solve for $\Delta$ if you know your budget for experimentation which dictates the largest $N$ you can have.
+
+## Marketing Factorial Example
+
+An article in the *International Journal of Research in Marketing* describes an experiment to test new ideas to increase direct mail sales by the credit card division of a financial services company. They want to know from experience that the interest rates are an important factor in attracting potential customers so they have decided to focus on factors involving both interest rates and fees. They want to test changes in both introductory and long term rates as well as the effects of adding an account-opening fee and lowering the annual fee. The factors tested are as follows.
+
+![](Capture9.JPG)
+
+The data contained in the "marketing experiment.csv" file. The response is Orders or the number of people who responded positively to the mailing. Each of the 16 treatment combinations was mailed to 7500 customers. Analyze this experiment and give recommendations on the best settings future mailings.
+
+I read in the data and added a proportion column.
+
+```{r}
+df<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\two level factorial design\\marketing experiment.csv")
+df$reps<-rep(7500, nrow(df))
+df$prop<-df$Y/df$reps
+```
+
+Plot the factors.
+
+```{r}
+par( mfrow = c(2,2) )
+boxplot(prop~as.factor(A), data=df)
+boxplot(prop~as.factor(B), data=df)
+boxplot(prop~as.factor(C), data=df)
+boxplot(prop~as.factor(D), data=df)
+```
+
+Fit the full model.
+
+```{r}
+
+mod<-glm(cbind(Y, reps-Y) ~ A * B * C * D, data = df, family = binomial )
+anova(mod, test="Chisq")
+```
+
+Create the reduced model. I did this one at a time.
+
+```{R}
+
+mod<-glm(cbind(Y, reps-Y) ~ A * B * C * D-A:B:C:D-B:C:D-A:C:D-A:B:D-A:B:C-B:C-B:D-A:D-A:C, data = df, family = binomial )
+anova(mod, test="Chisq")
+```
+
+Here I fit the final model.
+
+```{r}
+
+mod<-glm(cbind(Y, reps-Y) ~ A + B + C + D + A:B+C:D, data = df, family = binomial )
+anova(mod, test="Chisq")
+
+```
+
+Construct the interaction plots. You can use this [link](https://rdrr.io/cran/sjPlot/) to make them prettier.
+
+```{r}
+plot_model(mod, type="int")
+
+```
+
+## How to Generate Two-Level Designs
+
+The best way is to use the `FrF2` package in r. Below is a $2^4$ full factorial design.
+
+```{r}
+
+library(FrF2)
+d1<-FrF2(nruns=16, nfactors=4, randomize=FALSE)
+d1
+class(d1)
+
+```
+
+The really annoying part is that the columns are factors and you need them to be numeric to get the correct analysis in R. The following code will fix that.
+
+```{r}
+
+d1<-lapply(d1, function(x) as.numeric(as.character(x)))
+
+```
+
+## Python Code
+
+```{r}
+library(reticulate)
+#py_install("pyDOE") #to install a python package in reticulate
+#py_install("scipy")
+#py_install("numpy")
+```
+
+While you can certainly analyze designs in Python (use regression) and create interactions plots (use code in previous notes) there is no current way to generate these dseigns in Python.
+
+Here is a [package for generating designs in Python](https://pythonhosted.org/pyDOE/factorial.html#factorial). But it has not been updated since 2013 :( I know where it is broken. It will not generate factorial and fractional factorial designs. It will generate Placket Burman desings (we did not learn them, but they are small screening designs).
