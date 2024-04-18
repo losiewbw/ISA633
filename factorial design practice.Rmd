@@ -1,0 +1,51 @@
+---
+title: "Factorial Design Practice"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+   
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+Suppose that you are a data scientist at Instagram, and you are interested in running an experiment to learn about how user engagement is influenced by ad frequency. Currently users see an ad every 8 posts in their social feed, but, in order to increase ad revenue, your manager is pressuring your team to show an ad every 5 posts, under the assumption that users will not behave any differently under this new regime. You are justifiably nervous about this change and you worry that this will substantially decrease user engagement and hurt the overall user experience. As such you propose an experiment to test this new regime before rolling it out to all users. You will set ad frequency with levels 9:1, 7:1, 4:1, 1:1 corresponding to ad frequencies of 1 in 10, 1 in 8, 1 in 5, and every other. Additionally, suppose ad type is introduced as a second design factor with levels photo, video.
+
+1. Set up the treatment combinations for this experiment.  Conceptual alternative question: describe how you would create all the treatment combinations for this experiment?
+
+```{r}
+
+```
+
+
+2. Set up the recommended run order for this experiment. Conceptual alternative question: what is the recommended run order for this experiment?
+
+```{R}
+
+
+
+```
+
+3. The data for this experiment is in the Instagram.csv file.  You ran the experiment for a total fo 5 weeks and measured the average ad revenue per week. Analyze the experiment and state your conclusion. Conceptual alternative questions: What do the results of the analysis tell you?  What should you do next?  Is this analysis correct?  What will be the degrees of freedom for each factor?
+
+```{R}
+
+
+```
+
+4. What are the best settings of type and frequency to maximize revenue? Conceptual alternative questions: What type should they use going forward?  What level of ratio is best to maximize revenue?
+
+
+```{r}
+
+```
+
+
+

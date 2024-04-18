@@ -79,11 +79,11 @@ Recall, a regression slope $\beta_A$ is the defined as the change in the average
 
 The slope $\beta_A$ is just one half the effect, $E_{A}$. Or just the difference in the high-low averages divided by two. $E_{A}$ = Main Effect
 
-![](images/Screenshot 2024-04-16 142930.png)
+![](images/Screenshot%202024-04-16%20142930.png)
 
 Here is a geometric representation of a $2^3$ factorial design.
 
-![](images/Screenshot 2024-04-16 142952.png)
+![](images/Screenshot%202024-04-16%20142952.png)
 
 ### Interactions
 
