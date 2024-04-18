@@ -1,0 +1,293 @@
+---
+title: "Homework 5"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+
+Miami is running an experiment attempting to entice more students to eat on campus. They sent out mailers with a different offer to students. One offer was “bring a friend for free” another was “take a to-go bag” and lastly “50% off one meal”. They measured the spend on campus dining for each offer. The data is contained in the file “miami.csv”.  Miami would like to select the dining incentive that works best regardless of the student year.
+
+
+
+1. Provide the appropriate graphical and numeric summary for the data.  
+
+```{r}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/miami.csv")
+```
+
+```{r}
+library(tidyverse)
+
+df_long<-df %>% pivot_longer(c("Friend", "Togo", "PerctOff"),
+                             names_to = "mailer",
+                              values_to="spend")
+df_long$mailer<-as.factor(df_long$mailer)
+```
+
+```{r}
+boxplot(spend~mailer,data=df_long)
+```
+```{r}
+df_nonzero <- filter(df_long, spend > 0)
+
+boxplot(spend~mailer,data=df_nonzero)
+```
+
+```{r}
+df_nonzero %>% group_by(mailer) %>% summarize("mean"=mean(spend), "sd"=sd(spend), "count"=n())
+```
+
+
+2. Analyze the experiment. Is there evidence that one of the offers is better?
+
+```{R}
+mod1<-aov(spend~mailer+Year, data=df_nonzero) 
+summary(mod1)
+
+```
+```{r}
+original_par <- par()
+
+library(multcomp)
+tukey<-glht(mod1, linfct=mcp(mailer="Tukey"))
+summary(tukey)
+par(mar = c(5, 8, 4, 2))
+plot(tukey)
+```
+
+
+3. Make your recommendation to Miami based your analysis.
+
+I would recommend Miami implement the "take a to-go bag" mailer to entice more students to eat on campus
+
+
+4. Kroger is testing out different produce layouts in it’s 5 pre-designated testing stores. These stores are chosen based on the the demographics of their customers. They will test layouts produce configurations 1-5 during 5 months of testing. Produce an appropriate design for this scenario and show it below. Make sure the treatments are in a random order.
+
+```{r}
+set.seed(13)
+configuration <- factor(c(1,2,3,4,5))
+store1 <- sample(configuration,5)
+store2 <- sample(configuration,5)
+store3 <- sample(configuration,5)
+store4 <- sample(configuration,5)
+store5 <- sample(configuration,5)
+treatments<-c(store1, store2, store3, store4, store5)
+block <- factor( rep(c("store 1", "store 2", "store 3", "store 4", "store 5"),each=5))
+plan<-data.frame("Store" = block, "treatment", "Configuration" = treatments)
+plan
+```
+
+Uber conducted in the past was to test different versions of the Uber app's home screen. In this test, users were randomly assigned to one of four groups: Group A saw the original version of the home screen, Group B saw a modified version with a larger map and a different arrangement of icons, Group C saw a modified version with personalized recommendations for their next ride and Group D saw a combination of B and C. The test was run for several weeks, and Uber monitored ride bookings.
+
+In a continuation of the experiment above, Uber expanded the roll out of the treatments to different markets in different states. The data for this larger experiment is contained in the file "uber2.csv".  
+
+5. Provide an appropriate numerical summary of the data.
+
+```{r}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/uber2.csv")
+head(df)
+```
+```{r}
+library(tidyverse)
+df_long <- df %>% pivot_longer(!State,
+                               names_to='treatment',
+                               values_to = "ride"
+                          )
+```
+
+Here is a summary ignoring the effect of state
+```{r}
+df_long %>% group_by(treatment, ride) %>% summarise(n=n()) %>% mutate(freq=n/sum(n))
+```
+
+And here is a summary looking at each state
+```{r}
+df_long %>% group_by(State, ride) %>% summarise(n=n()) %>% mutate(freq=n/sum(n))
+```
+
+6. Analyze the experiment.  Is there evidence that the treatment is making a difference in the bookings?
+
+```{r}
+df_long$treatment<-as.factor(df_long$treatment)
+df_long$State<-as.factor(df_long$State)
+
+```
+
+```{r}
+mod<-glm(ride~treatment+State, data=df_long, family="binomial")
+anova(mod, test="Chisq")
+```
+Yes, there is evidence that at least one treatment is making a difference in the bookings.
+
+7. What should uber do moving forward?
+
+```{R}
+library(multcomp)
+comps<-glht(mod, linfct = mcp(treatment="Tukey"))
+summary(comps)
+plot(comps)
+
+```
+Based on the Tukey test I would recommend Uber use screen D
+
+8. If I performed 55 tests and use $\alpha=0.05$, what is the Bonferroni correction I would use?
+
+```{r}
+0.05/55
+
+```
+
+9.  You work for a small start‐up brewery. The master brewer
+has come up with two new beers, but the brewery only has space
+and equipment to produce one of them. To decide between the two,
+he tells you that he'll have all 22 employees stay after work. Eleven
+will drink recipe A, and the other 11 will drink recipe B. Each
+person will rate the beer on a scale from 1 to 10. The brand that has
+the highest average rating will be the winner and go into
+production. Comment on this design. If it is satisfactory, say why.
+If it is unsatisfactory, say why and propose a better design.
+
+
+This design is not great as it is open to selection bias as certain employees may be biased towards different types of beers and are more likely to like or dislike A or B simply based on what they are. The master brewer should randomize which employees drink which beer to help remove some of the selection bias. He should also implement blinding so the employees do not know which beer they are consuming to further reduce bias. Lastly, each employee should try both beers. However, we always assume that the treatment groups are independent. If all employees try both beers then this is not the case here as employees were in the control and the treatment groups.
+
+
+10. Use the "beer.csv" file to analyze the results of the beer tasting.  The master brewer took your advice and ran the test how it should be. Makes sure to provide a summary of the data as well as the test.
+
+```{r}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/beer.csv")
+
+df_long<-df %>% pivot_longer(c("beer1", "beer2"),
+                             names_to = "beer",
+                              values_to="rating")
+df_long$X <- NULL
+```
+
+```{r}
+boxplot(rating~beer,data=df_long)
+```
+```{r}
+df_long %>% group_by(beer) %>% summarize("mean"=mean(rating), "sd"=sd(rating), "count"=n())
+```
+```{r}
+t.test(rating~beer, data=df_long, paired=TRUE)
+```
+
+11. Unilever is upset about the market share of Duke's mayonnaise in the south.  They are reformulating their flagship mayonnaise, Hellmann's to gain market share.  To aid in the process they have recruited three professional mayonnaise tasters in a experiment.  Each of the tasters eats a spoonful of the different mayonnaise formulations (1,2,3) two times. They then rate each on a scale of 1-5. First create a visualization of the mayonnaise experiment. Second conduct the appropriate analysis comparing the three new mayonnaise formulations.
+
+```{r}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/mayo.csv")
+head(df)
+df$mayo<-as.factor(df$mayo)
+df$person<-as.factor(df$person)
+```
+
+```{r}
+summary<-df %>% group_by(person, mayo) %>% summarize("mean Score"=mean(score), "Sd Score"=sd(score), "n"=n())
+```
+
+```{r}
+library(kableExtra)
+knitr::kable(
+  summary,
+  caption="Summary"
+  
+)%>% kable_styling(bootstrap_options = c("striped", "hover"),
+                full_width = F,
+                font_size = 12,
+                position = "left")
+```
+
+```{r}
+df %>% ggplot(aes(x=person, y=score, group=interaction(mayo, person)))+
+        geom_boxplot(aes(color=mayo))+
+        theme_bw()+
+        xlab("Person")+
+        guides(color = guide_legend(title = "Mayo")) 
+```
+
+```{r}
+mod <- aov(score ~ mayo + Error(person/mayo), data = df)
+summary(mod)
+```
+
+Harry's sells men's grooming supplies online and in retail stores like Target. In
+their subscription business, customers sign up to receive razor blades and
+foaming shave gel every few months. Because this is a new mode of
+purchasing for many customers, Harry's advertises on many channels from
+online display advertisements to Internet radio commercials.
+The marketing team at Harry's was considering launching a new advertising
+campaign focused on advertising within Facebook's mobile app. This is a
+tricky proposition for Harry's, because it's widely recognized in the industry
+that shopping behavior on mobile platforms is very different from shopping
+behavior on desktop platforms. Namely, many customers use their mobile
+devices for browsing and exploration and delay purchasing until they're back
+at a desktop where entering credit card information is easier. Harry's was
+concerned that their usual approach to evaluating advertising effectiveness,
+counting how many users purchase immediately after seeing the
+advertisement, wouldn't work for mobile advertising. If they did a user‐level
+test and randomly showed the ads to some users and not to others, but they
+were unable to track the sales for those users as they moved from mobile to
+desktop, then Harry's might conclude that the mobile ads don't work when
+they really do. (Those in marketing might refer to mobile advertising as a “top
+of funnel” channel, because it generally reaches consumers who are relatively
+early in the purchase process.)
+
+Instead, Harry's analytics team planned to run the ads in four distinct
+geographic regions. The sales for those four regions could be compared with
+the sales for four control regions. At n=8 this is a tiny sample size, and so it
+was important to maximize the amount of useful information generated in the
+experiment. If the analytics team were to choose each set of four cities at
+random and then measure sales for each city, there would be a substantial
+amount of variation in sales from city to city. If the control cities happen to be
+larger than the treatment cities, Harry's might mistakenly conclude that the
+ads don't work when they really do. For the Harry's team, the solution was
+propensity score matching. To implement this method, one computes
+propensity scores for the experimental units and then matches units that have
+similar scores. In essence, the matching is done on the basis of the estimated
+propensity of being assigned to the treatment. In the present case, Harry's
+analysts used fitted values from a regression model as propensity scores.
+
+
+12. Use the data in HarrysDemographicData.csv to predict monthly sales for each city. Sort the cities according to predicted sales. Drop the three largest cities because their predicted sales are not at all close to each other. Match the next 16 cities into eight pairs: 1 and 2, 3 and 4, etc. We are interested in pairs for which the predicted sales are very close to each other. The variable "sma" gives you the city name. 
+
+```{r}
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/HarrysDemographicData.csv")
+```
+
+```{r}
+model <- lm(harrys_sales_last_month ~ ., data = df)
+```
+
+```{r}
+df$predicted_sales <- predict(model)
+df <- df[order(df$predicted_sales, decreasing = TRUE), ]
+head(df)
+```
+```{r}
+df <- df[-(1:3), ]
+head(df)
+```
+
+```{r}
+df$predicted_sales_diff <- c(NA, diff(df$predicted_sales))
+
+df <- df[order(df$predicted_sales_diff, decreasing = TRUE),]
+
+pairs <- matrix(df$sma[1:16], ncol = 2, byrow = TRUE)
+
+pairs
+```
+
