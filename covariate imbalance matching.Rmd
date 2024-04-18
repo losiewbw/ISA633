@@ -203,9 +203,9 @@ Some people advocate for testing for covariate imbalance and then trying to corr
 
 OK, so why don't we just block?
 
-First, blocking as a strategy for inducing covariate balance requires knowing in advance that covariate might cause the imbalance.
+First, blocking as a strategy for inducing **covariate balance requires knowing in advance that covariate might cause the imbalance.**
 
-Second, you can't block on every covariate or even many covariates--you will run out of df.
+Second, [you can't block on every covariate or even many covariates]{.underline}--you will run out of df.
 
 The way to avoid covariate imbalance is to take **preventative action** and use a matched design.
 

@@ -58,6 +58,7 @@ mod1<-aov(spend~mailer+Year, data=df_nonzero)
 summary(mod1)
 
 ```
+
 ```{r}
 original_par <- par()
 
@@ -76,18 +77,16 @@ I would recommend Miami implement the "take a to-go bag" mailer to entice more s
 
 4. Kroger is testing out different produce layouts in it’s 5 pre-designated testing stores. These stores are chosen based on the the demographics of their customers. They will test layouts produce configurations 1-5 during 5 months of testing. Produce an appropriate design for this scenario and show it below. Make sure the treatments are in a random order.
 
+**Latin Squares Design**
+
 ```{r}
-set.seed(13)
-configuration <- factor(c(1,2,3,4,5))
-store1 <- sample(configuration,5)
-store2 <- sample(configuration,5)
-store3 <- sample(configuration,5)
-store4 <- sample(configuration,5)
-store5 <- sample(configuration,5)
-treatments<-c(store1, store2, store3, store4, store5)
-block <- factor( rep(c("store 1", "store 2", "store 3", "store 4", "store 5"),each=5))
-plan<-data.frame("Store" = block, "treatment", "Configuration" = treatments)
-plan
+library(agricolae)
+store<-c(1,2,3,4,5)
+outdesign<-design.lsd(store, seed=13)
+lsd<-outdesign$book
+levels(lsd$row)<-c("Month 1", "Month 2", "Month 3", "Month 4", "Month 5")
+levels(lsd$col)<-c("Store 1", "Store 2", "Store 3", "Store 4", "Store 5")
+lsd
 ```
 
 Uber conducted in the past was to test different versions of the Uber app's home screen. In this test, users were randomly assigned to one of four groups: Group A saw the original version of the home screen, Group B saw a modified version with a larger map and a different arrangement of icons, Group C saw a modified version with personalized recommendations for their next ride and Group D saw a combination of B and C. The test was run for several weeks, and Uber monitored ride bookings.
@@ -163,6 +162,8 @@ If it is unsatisfactory, say why and propose a better design.
 
 This design is not great as it is open to selection bias as certain employees may be biased towards different types of beers and are more likely to like or dislike A or B simply based on what they are. The master brewer should randomize which employees drink which beer to help remove some of the selection bias. He should also implement blinding so the employees do not know which beer they are consuming to further reduce bias. Lastly, each employee should try both beers. However, we always assume that the treatment groups are independent. If all employees try both beers then this is not the case here as employees were in the control and the treatment groups.
 
+**the best design would have each of the 22 people taste each beer. Paired test (t-test).**
+
 
 10. Use the "beer.csv" file to analyze the results of the beer tasting.  The master brewer took your advice and ran the test how it should be. Makes sure to provide a summary of the data as well as the test.
 
@@ -178,9 +179,11 @@ df_long$X <- NULL
 ```{r}
 boxplot(rating~beer,data=df_long)
 ```
+
 ```{r}
 df_long %>% group_by(beer) %>% summarize("mean"=mean(rating), "sd"=sd(rating), "count"=n())
 ```
+
 ```{r}
 t.test(rating~beer, data=df_long, paired=TRUE)
 ```
@@ -264,7 +267,12 @@ analysts used fitted values from a regression model as propensity scores.
 12. Use the data in HarrysDemographicData.csv to predict monthly sales for each city. Sort the cities according to predicted sales. Drop the three largest cities because their predicted sales are not at all close to each other. Match the next 16 cities into eight pairs: 1 and 2, 3 and 4, etc. We are interested in pairs for which the predicted sales are very close to each other. The variable "sma" gives you the city name. 
 
 ```{r}
-df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/HarrysDemographicData.csv")
+df<-read.csv("https://raw.githubusercontent.com/losiewbw/ISA633/main/HarrysDemographicData.csv", stringsAsFactors = TRUE)
+```
+
+```{r}
+library(DataExplorer)
+plot_missing(df)
 ```
 
 ```{r}
