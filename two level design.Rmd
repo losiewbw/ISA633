@@ -91,7 +91,9 @@ When all the factors have only two levels, the AB interaction effect is defined 
 
 ![](Capture10.png)
 
-![](Capture8.png) \### Regression Analysis
+![](Capture8.png)
+
+\### Regression Analysis
 
 Typically we calculate the effects using `lm()` (or regression analysis in another package) on the *coded experimental design*. It probably better (or easier) to think of the model for a two-level factorial design using the familiar regression equation.
 
