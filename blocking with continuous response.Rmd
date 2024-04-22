@@ -221,7 +221,7 @@ levels(rcb$block) <- c("agent 1", "agent 2", "agent 3", "agent 4", "agent 5", "a
 rcb
 ```
 
-Now let's simulate some data for an analysis. But the way, this is something I do frequently to check things are set up correctly!
+Now let's simulate some data for an analysis. By the way, this is something I do frequently to check things are set up correctly!
 
 ```{r}
 set.seed(13)
@@ -572,7 +572,7 @@ summary(mod)
 
 -   Df = 3 tee heights - 1 = 2
 
--   9 golfers -1 \*2 replicates = 18 residuals
+-   9 golfers -1 \*2 replicates = 16 residuals
 
 Here is the **incorrect way**!!! -- DO NOT USE IN HOMEWORK
 

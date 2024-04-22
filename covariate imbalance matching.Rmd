@@ -93,7 +93,7 @@ How should the sample statistics from the control and treatment groups compare t
 
 -   
 
-Below I have taking different sample sizes representing either the control or the treatment groups. Then I compared the average amount in the bank account, the proportion of people who have a personal loan, and the proportion of people who have a housing loan for each sample size in the control and treatment groups.
+Below I have different sample sizes representing either the control or the treatment groups. Then I compared the average amount in the bank account, the proportion of people who have a personal loan, and the proportion of people who have a housing loan for each sample size in the control and treatment groups.
 
 ```{r}
 size<-c(10, 30, 100, 250, 500, 1000, 2000, 4000, 8000)
@@ -285,13 +285,13 @@ Suppose you had eight observations on age: 24, 35, 39, 40, 40, 41, 45, 56
 
 How would you match these?
 
--   40 \<\--\> 41
+-   40 \<--\> 41
 
--   45 \<\--\> 56
+-   45 \<--\> 56
 
--   39 \<\--\> 40
+-   39 \<--\> 40
 
--   24 \<\--\> 35
+-   24 \<--\> 35
 
 -   Summation of the total abs differences
 

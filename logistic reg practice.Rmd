@@ -1,0 +1,96 @@
+---
+title: "Logistic Regression Practice"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+Universal Bank is a relatively young bank that is growing rapidly in terms of overall customer acquisition. The majority of these customers are liability customers with varying sizes of relationship with the bank.  The customer base of asset customers is quite small and the bank is interested in growing its base.  A campaign the bank ran for liability customers showed a healthy conversion rate of over 9% successes.  This has encouraged the retail marketing department to devise smarter campaigns with better target marketing. The goal of the analysis is to model the previous campaigns customer behavior to figure out what combinations of factors make a customer more likely to accept a personal loan. The data is contained in the UniversalBank.csv.
+
+![](Capture.png)
+
+1. Fit a model that including all possible linear predictors of whether or not someone accepted a personal loan in the last campaign (PersonalLoan). When fitting a model, it is always best to verify there is no missing values.  Make sure that you remove variables that are not appropriate to have in the model. 
+
+```{r}
+
+```
+
+
+2. Is there evidence that this model is explaining something about the response?  Provide the test.
+
+```{r}
+
+
+```
+
+
+
+3. Evaluate the models ability to separate the folks who took a personal loan from those who did not.
+
+```{r}
+
+```
+
+
+
+4. Is there evidence that Income is useful for predicting if someone responded to the Personal Loan offer?  Why or why not?
+
+
+
+5. Interpret the coefficient for Income.
+
+```{R}
+
+
+```
+
+
+
+6. Is there evidence that using online banking is useful for predicting if someone responded to the Personal Loan offer? Why or why not?
+
+
+
+7. Interpret the coefficient for Online Banking.
+
+```{r}
+
+
+```
+
+
+
+8. Are there predictors in the model that should not be there?  Run a stepwise regression (both directions) to find a better model using these predictors. Use linear terms only.
+
+```{r}
+
+```
+
+9. What are the odds that a person takes a personal loan over the base case if someone is 37 years old, has a \$29,000 income, a family of 4, an average credit card balance of \$400, a graduate degree, a \$155,000 mortgage and uses online banking.  This person does not have a securities account or a CD account or a credit card with Universal Bank.  Is it likely that this person takes a personal loan?  Use the reduced model. 
+
+```{r}
+
+
+```
+
+
+
+10. For the reduced model, what is the base case odds?
+
+```{r}
+
+
+```
+
+

@@ -141,7 +141,7 @@ So modeling the log(odds) instead of the actual response takes care of
 the problem with constraints on the response function because
 $-\infty < ln(\frac{p}{1-p}) <\infty$.
 
-### Interpreting Coefficents
+### Interpreting Coefficients
 
 Recall the odds are given by:
 
@@ -156,6 +156,7 @@ So for example if we are modeling whether someone accepts a personal
 loan (Yes or No) based on their income ($x_1$) then
 
 $$\text{Odds}(\text{Personal Loan}=\text{Yes}|Income)=exp(\beta_0+\beta_1\text{Income})$$
+
 If the estimated coefficient for income $\hat{\beta_1}=0.03757$ and
 $\hat{\beta_0}=-6.16715$ then the odds that a customer with zero income
 with accept a long is estimated by:

@@ -158,7 +158,7 @@ lsd$y<-round(runif(16, min=1, max=84))
 lsd
 ```
 
--   y is a collapsed reponse
+-   y is a collapsed response
 
 Fit the `glm` and use the `Chisq` anova test. But here we need to adjust the analysis a bit given we have a rate, like a collapsed data set, and not a response that is actually "0" or "1".
 
@@ -177,7 +177,7 @@ anova(mod, test="Chisq")
 
 ```
 
--   The row and col p-values are irrevelant
+-   The row and col p-values are irrelevant
 
 What is your conclusion?
 
