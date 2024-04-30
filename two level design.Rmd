@@ -35,25 +35,17 @@ knitr::opts_chunk$set(echo = TRUE,
 
 What if we used five factors in the web experiment, where the fifth factor had three levels? How many treatment combinations would be required for a full factorial?
 
--   3,3,2,2
-
-```{r}
-3*3*2*3*2
-```
+-   3,3,2,2,3 = 3\**3\**2\**2\**3 = 108 (which is a lot of webpages)
 
 The solution is not to drop *factors* from the experiment, but drop *levels* from the factors. How many treatment combinations would be required if we have 5 factors each at two levels?
 
-```{r}
-2*2*2*2*2
-```
+-   32 = 2\**2\**2\**2\**2 - $2^k$ (2 = \# of levels, k = #no. of factors)
 
-**A shorthand notation for a two-level factorial with k factors is a** $2^k$ **factorial design.**
+A shorthand notation for a two-level factorial with k factors is a $2^k$ factorial design.
 
 In two-level factorials, if a factor has quantitative levels the two levels are denoted symbolically by (-1) and (+1) where (-1) represents the lowest level the experimenter would consider and (+1) represents the highest level the experimenter would consider.
 
-**The high and low are spread out as a far as possible in order to accentuate the signal or difference in response between the two levels.**
-
--   This dictates the effect size you are trying to detect
+The high and low are spread out as a far as possible in order to accentuate the signal or difference in response between the two levels. - this dictates the effect size you are trying to detect.
 
 If a factor has qualitative levels, the (-1) and (+1) designations are arbitrary, but the two levels chosen normally would be two that the experimenter believe should result in the maximum difference in response.
 
@@ -69,31 +61,53 @@ If this is the case then $\alpha_{-}=-\alpha_{+}$.
 
 And $\alpha_{-}= \bar{y}_{-...}-\bar{y}_{....}$ and $\alpha_{+}= \bar{y}_{+...}-\bar{y}_{....}$ and $\bar{y}_{....}=\frac{\bar{y}_{+...}+\bar{y}_{-...}}{2}$.
 
-$$\bar{y}$$ = average where alpha is at its highest level
+where alpha is at its low level = $$\alpha_{-}= \bar{y}_{-...}-\bar{y}_{....}$$
+
+where alpha is at its high level = $\alpha_{+}= \bar{y}_{+...}-\bar{y}_{....}$\
 
 And this works for the rest of the main effects and the interaction effects as well.
 
-Because the two effects for each factor are the same value with different signs we can define the main effects for a two-level factorial as $E_A=\bar{y}_{+...}-\bar{y}_{-...}$ or **the change in the average response caused by a change in the factor from its low (-) level to its high (+) level.**
+Because the two effects for each factor are the same value with different signs we can define the main effects for a two-level factorial as $E_A=\bar{y}_{+...}-\bar{y}_{-...}$ or the change in the average response caused by a change in the factor from its low (-) level to its high (+) level.
 
 Recall, a regression slope $\beta_A$ is the defined as the change in the average response when a one-unit change is made in A. In this case one "unit" is moving from 0 to +1 (since we have our factor levels coded).
 
-The slope $\beta_A$ is just one half the effect, $E_{A}$. Or just the difference in the high-low averages divided by two. $E_{A}$ = Main Effect
+The slope $\beta_A$ is just one half the effect, $E_{A}$. Or just the difference in the high-low averages divided by two.
 
-![](images/Screenshot%202024-04-16%20142930.png)
+![](Capture6.JPG)
 
 Here is a geometric representation of a $2^3$ factorial design.
 
-![](images/Screenshot%202024-04-16%20142952.png)
+![](Capture7.JPG)
+
+we can estimate linear (main) effects - A,B,C
+
+interactions - AB, BC, AC (2factor)
+
+ABC (3 factor)
 
 ### Interactions
+
+definition : the effect (beta-hat i.e. slope) of A on Y depends on the level of B.
+
+beta-hat = (X'X)\^-1 . X' Y - method of least squares - method of estimating the coefficients in regression models
+
+X = Model matrix.
+
+A B Y Int A B AB
+
+-1 -1 10 1 -1 -1 1
+
+1 1 15 1 1 1 1
+
+-1 1 20 1 -1 1 -1
+
+1 -1 25 1 1 -1 -1
 
 When all the factors have only two levels, the AB interaction effect is defined as one-half the difference in the simple effect of factor A when factor B is held constant at its high level and the simple effect of factor A when factor B is held constant at its low level.
 
 ![](Capture10.png)
 
-![](Capture8.png)
-
-\### Regression Analysis
+![](Capture8.png) \### Regression Analysis
 
 Typically we calculate the effects using `lm()` (or regression analysis in another package) on the *coded experimental design*. It probably better (or easier) to think of the model for a two-level factorial design using the familiar regression equation.
 
@@ -107,6 +121,12 @@ chem
 X<-model.matrix(y~(.)^4, data=chem)
 t(X)%*%X
 ```
+
+2 to the 4th - 2 level factorial, 4 factors
+
+To be orthogonal it means that the model matrix
+
+Model matrix times 1 over n is the correlation matrix.
 
 It is possible to perform an analysis in "real units" but not preferable. Performing an analysis in coded units has the following advantages:
 
@@ -132,20 +152,22 @@ The coded design above has several interesting properties:
 
 ## Example of a $2^4$ Factorial
 
-Numerous small vendors push carts and sell food to tourists in Washington, DC, especially near The Mall. At one of The Mall is the Lincoln Memorial, at the other end is the Capital Building. A man owns several of these carts and deploys them at either end of the The Mall. He wants to maximize his profits and so conducts an experiment. The levels of the factors are given below.
+Numerous small vendors push carts and sell food to tourists in Washington, DC, especially near The Mall. At one end of The Mall is the Lincoln Memorial, at the other end is the Capital Building. A man owns several of these carts and deploys them at either end of the The Mall. He wants to maximize his profits and so conducts an experiment. The levels of the factors are given below.
 
 ![](Capture2.png)
 
 The data file "HotDogCarts.csv" contains the data for this design with replications.
 
 ```{r}
-df<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\two level factorial design\\HotDogCarts.csv")
+df<-read.csv("HotDogCarts.csv")
 
 ```
 
 How many replicates does this design contain?
 
--   
+-   7
+
+-   What kind of design is this -2\^4 factorial
 
 ```{R, echo=FALSE}
 
@@ -162,6 +184,7 @@ library(tidyverse)
 df_long <- df %>% pivot_longer(starts_with("y"),
                                names_to = "replicate",
                                values_to = "profits")
+df_long
 
 ```
 
@@ -175,7 +198,7 @@ boxplot(profits~C, data=df_long)
 boxplot(profits~D, data=df_long)
 ```
 
-The next step is to fit the full regression model. Note, even though A, B, C, and D are technically factors we need to keep them coded as numeric in r. This will give us the correct effect estimates we are after (see above).
+The next step is to fit the full regression model (all possible main effects and interactions). Note, even though A, B, C, and D are technically factors we need to keep them coded as numeric in r. This will give us the correct effect estimates we are after (see above).
 
 -   As an aside, what will the effect estimates be if we code them as factors?
 
@@ -212,6 +235,14 @@ plots[[9]]
 plots[[10]]
 
 ```
+
+A= 1
+
+B =1
+
+C = -1
+
+D = -1
 
 And check assumptions.
 
@@ -268,10 +299,15 @@ The data contained in the "marketing experiment.csv" file. The response is Order
 
 I read in the data and added a proportion column.
 
+this is replicated 7500 times
+
+original data had 7500\*16 rows.
+
 ```{r}
-df<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\two level factorial design\\marketing experiment.csv")
+df<-read.csv("marketing experiment.csv")
 df$reps<-rep(7500, nrow(df))
 df$prop<-df$Y/df$reps
+df
 ```
 
 Plot the factors.
@@ -315,6 +351,14 @@ Construct the interaction plots. You can use this [link](https://rdrr.io/cran/sj
 plot_model(mod, type="int")
 
 ```
+
+A = 1
+
+B= -1
+
+C= 1
+
+D= -1
 
 ## How to Generate Two-Level Designs
 
