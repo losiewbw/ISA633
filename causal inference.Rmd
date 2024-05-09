@@ -1,0 +1,389 @@
+---
+title: "when you Can't Experiment: Casual Inference Methods"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Problems with Causality
+
+When you can't experiment, recall you have a couple of issues calculating the $ATE$:
+
+1.  Selection bias
+
+2.  Heterogeneity of treatment effects
+
+Meaning you can't just take two samples and take the difference in the means. We have to account for these two problems in our anlayses.
+
+## Examples where Experiments are not Possible
+
+1.  When the causal action to be tested is not under the control of the organization.
+
+-   User behavior when someone switches from iPhone to Samsung
+
+2.  When there are too few units.
+
+-   Merger + Acquisition
+
+3.  When establishing a Control may incur too large an opportunity cost since they do not receive the treatment.
+
+-   Superbowl Ads - y takes to long to measure
+
+4.  When the change is expensive relative to the perceived value.
+
+-   What if Google didn't display any ads
+
+5.  When the desired unit of randomization cannot be properly randomized.
+
+-   hard to randomize viewers of ads
+
+6.  When what is being tested in unethical or illegal.
+
+-   withholding medical treatment
+
+## References
+
+[3 part Microsoft blog](https://medium.com/data-science-at-microsoft/causal-inference-part-1-of-3-understanding-the-fundamentals-816f4723e54a)
+
+[A Survey on Causal Inference](https://arxiv.org/pdf/2002.02770.pdf)
+
+[Causal Inference The Mixtape](https://mixtape.scunning.com/index.html)
+
+[Mastering Metrics](https://www.masteringmetrics.com/)
+
+[Uber Examples](https://www.youtube.com/watch?v=j5DoJV5S2Ao)
+
+There are many different methods to estimate causal effects when it is not possible to use an experiment to obtain an estimate of the causal effect. Let's highlight a few.
+
+### Regression Discontinuity
+
+Regression Discontinuity (RD) is a methodology that can be used whenever there is a clear threshold that identifies the treatment population. Based on that threshold, we can reduce selection bias by identifying the population that is just below the threshold as Control and compare that to the population that is just above the threshold as the treatment.
+
+Recall, the selection bias is the piece of the causal estimate that is present with observation data and not present with experimental data (see previous notes).
+
+Below is an example from Varian (2016). The study examines the impact of the minimum legal drinking age on mortality.
+
+![](Capture.png)
+
+RD is very attractive when algorithms are used to make choice of treatment. For example, ads may receive some special treatment such as appearing in a prominent position if they have a score that exceeds some threshold.
+
+There are two forms of RD.
+
+-   Sharp RD, where something happens at a specific value of a threshold (i.e. you get medicare at 65, you can legally drink at 21, etc)
+
+-   Fuzzy RD where there is a increase in probability of something happening at a threshold.
+
+We will focus on Sharp RD. We will define $X_i$ as a running variable, age in the drinking example. And $Y$ as the outcome of interest, deaths per 100,000 in the drinking age example.
+
+The sharp cutoff value we call $c_0$. 21 in the drinking example.
+
+We define $D$, the treatment as $D=0$ if $x_<c_0$ and $D=1$ if $x_i\geq c_0$.
+
+We then work this indicator variable, $D$ into a regression model.
+
+If we assume constant treatment effects (increasing or decreasing continuously across the threshold) then we can state our potential outcomes as:
+
+$$ Y_i^0=\alpha+\beta X_i$$
+
+$$ Y_i^1=Y_i^0 + \delta $$
+
+We define $\delta_i=Y_i^1-Y_i^0$ which is the causal effect, the difference between the two states of the outcome.
+
+Using what is called "switching equation" $Y_i=D_iY_i^1+(1-D_i)Y_i^0$ we can substitute and get
+
+$$ Y_i=\alpha +\beta X_i+\delta D_i+\epsilon_i$$
+
+where the treatment effect, $\delta$ is the discontinuity.
+
+Below is a simulation of some potential outcome vs. a test score. In this version of the simulation notice the effect $D=0$.
+
+```{r}
+library(tidyverse)
+
+# simulate the data
+
+dat<- tibble(
+  x=rnorm(n=1000,mean=50, sd=25)
+) %>% mutate(
+  x=if_else(x<0, 0, x) ## replaces negative values with 0
+) %>% filter (x<100)
+
+# cutoff at x=50
+
+dat<- dat %>%
+  mutate (
+    D=if_else(x>50,1,0), ## This creates a dummy variable for the cut off value
+    y1=20+0*D+1.5*x+rnorm(n(), 0,20) ## simulate the truth
+  )
+
+ggplot(data=dat, aes(x, y1, color=factor(D)))+
+  geom_point(alpha=0.5)+
+  geom_vline(xintercept=50, color="gray", linetype=2)+
+  stat_smooth(method="lm", se=F)+
+  labs(x="Test score (X)", y="Potential Outcome (Y1)")+theme_bw()
+```
+
+Now we change the effect to $D$ to have a jump at a test score of 50. The vertical distance between the two lines is the "local average treatment effect" or the treatment effect.
+
+```{r}
+
+dat<- dat %>%
+  mutate (
+    D=if_else(x>50,1,0),
+    y1=20+40*D+1.5*x+rnorm(n(), 0,20)
+  ) ## there is an effect with test score is greater than 50
+
+ggplot(data=dat, aes(x, y1, color=factor(D)))+
+  geom_point(alpha=0.5)+
+  geom_vline(xintercept=50, color="gray", linetype=2)+
+  stat_smooth(method="lm", se=F)+
+  labs(x="Test score (X)", y="Potential Outcome (Y1)")+theme_bw()
+
+```
+
+And you would get that estimate with a regression equation.
+
+```{r}
+reg<-lm(y1~x+factor(D), data=dat)
+summary(reg)
+
+```
+
+One thing to be aware of when setting up this sort of study is confounding factors that share the same threshold. For example, the legal gambling age is also 21.
+
+### Difference in Difference
+
+This is a very old technique, in fact this is the technique used to discover the source of cholera outbreaks was contaminated water circa 1849.
+
+It is widely applied in the social sciences as well as in economic analysis.
+
+It is typically used on longitudinal data, data over time.
+
+Let's consider a study on the effect of increasing minimum wage.
+
+Suppose you are interested in the effect of minimum wage on employment.
+
+If you had a billion dollars, complete discretion, and could run a randomized experiment how would you test whether minimum wages increased or decreased employment?
+
+-   Raise it somewhere for randomly assigned people
+
+-   Decrease it somewhere for randomly assigned people
+
+Lacking a randomized experiment, authors of a study decided to do the next best thing. In 1992 New Jersey was set to experience an increase in the state minimum wage from \$4.25 to \$5.05. But Pennsylvania's minimum wage was staying at \$4.25.
+
+Realizing they had an opportunity to evaluate the effect of the minimum wage increase by comparing the two states before an after. The fielded a survey of about 400 fast-food restaurants in both states-responses from this survey were used to measure the outcomes they cared about (i.e. employment).
+
+We are after the average causal effect of the minimum wage hike on employment or the ATT. We can write that as:
+
+$$\hat{\delta}=E[Y_{NJ}^1|\text{Post}]-E[Y_{NJ}^0|\text{Post}]+ $$
+
+$$[E[Y_{NJ}^0|\text{Post}]-E[Y_{NJ}^0|\text{Pre}]]- [E[Y_{PA}^0|\text{Post}]-E[Y_{PA}^0|\text{Pre}]]$$
+
+Now we have to assume that the groups "may differ in the absence of Treatment, yet they move in parallel". This is known as the parallel trends assumption.
+
+![](Capture2.PNG)
+
+The differences in the sample averages will identify the ATT under the parallel assumption, we may wish to use a regression model so that we might control for other variables that could have influence on $Y$. What does this remind you of?
+
+-   
+
+Using the switching equation $Y_i=D_iY_i^1+(1-D_i)Y_i^0$ we can write out a simple model for estimating the causal effect of minimum wage on employment.
+
+$$Y_{its}=\alpha+\gamma NJ_s+\lambda D_t+\delta(NJ\times D)_{st}+\epsilon_{ist}$$
+
+$NJ$ is a dummy variable equal to 1 if the observation is from New Jersey.
+
+$D$ is a dummy equal to 1 if the observation is from November (the post period).
+
+The equation above takes the following values:
+
+1.  $PA$ Pre: $\alpha$
+2.  $PA$ Post: $\alpha+\lambda$
+3.  $NJ$ Pre: $\alpha+\gamma$
+4.  $NJ$ Post: $\alpha+\gamma+\lambda+\delta$
+
+![](Capture3.PNG)
+
+Let's look further at the assumption of parallel trends:
+
+![](Capture4.PNG)
+
+[Here](https://bookdown.org/mike/data_analysis/difference-in-differences.html) is an example analysis.
+
+```{r}
+
+library(foreign)
+mydata = read.dta("http://dss.princeton.edu/training/Panel101.dta")
+
+```
+
+First create a dummy variable to indicate the time when the treatment started.
+
+```{R}
+mydata$time = ifelse(mydata$year >= 1994, 1, 0)
+
+```
+
+Then create another dummy variable to identify the treatment group.
+
+```{r}
+
+mydata$treated = ifelse(mydata$country == "E" |
+                            mydata$country == "F" | mydata$country == "G" ,
+                        1,
+                        0)
+```
+
+Then create an interaction between time and treated.
+
+```{r}
+
+mydata$did = mydata$time * mydata$treated
+
+```
+
+And get the estimate of the difference in differences.
+
+```{R}
+didreg = lm(y ~ treated + time + did, data = mydata)
+summary(didreg)
+```
+
+In this case the treatment has a negative effect. The `did` coefficient is the difference-in-differences estimator.
+
+### Synthetic Control
+
+Often times the only way a causal effect can be measured is to use some sort of comparison case study (such as mortality rates, average income, crime rates, etc.).
+
+The only way to study the responses listed above is to compare the response before and after some policy intervention (as you can't have an experiment that increases mortality rates...).
+
+In the field of economics, these case studies are often done retrospectively, i.e. looking at responses before and after some policy change and using comparative studies where researchers select comparison groups on the basis to subject measures of affinity between affected and unaffected groups.
+
+Synthetic control is a data-driven procedure to construct suitable comparison groups in case studies.
+
+Of course, it does not have to be applied retrospectively (i.e. see the Uber video). Organizations are using it to better understand a before and after intervention when there is not a possibility of a control group.
+
+#### How it works
+
+Synthetic control models optimally choose a set of weights which when applied to a group of corresponding units produce an optimally estimated counterfactual to the unit that received the treatment.
+
+This **counterfactual**, called the "synthetic unit," serves to outline **what would have happened to the aggregate treated unit had the treatment never occurred.**
+
+"In practice, it is often difficult to find a single unexposed unit that approximates the most relevant characteristics of the unit(s) exposed to the event of interest. The idea behind the synthetic control approach is that a combination of units often provides a better comparison for the unit exposed to the intervention than any single unit alone."
+
+Let $Y_{jt}$ be the outcome of interest for unit $j$ of $J+1$ aggregate units at time $t$ and treatment group be $j=1$.
+
+The synthetic control estimator models the effect of the intervention at time $T_0$ on the treatment group using a linear combination of optimally chosen units as synthetic control.
+
+For the post-intervention period, the synthetic control estimator measures the causal effect as
+
+$$Y_{1t}-\sum_{j=2}^{J+1}w_j^*Y_{jt} $$ where $w_j^*$ is a vector of optimally chosen weights.
+
+![](Capture5.PNG)
+
+[Here](https://bookdown.org/mike/data_analysis/synthetic-control.html) is a simulation example to help you understand. We will use the package `Synth`.
+
+We will simulate data for 10 states and 30 years. State A received the treatment `T=20` after year 15.
+
+`X1` and `X2` are the variables you wish to use to predict the outcome `Y`.
+
+```{r}
+
+set.seed(1)
+year         <- rep(1:30, 10)
+state        <- rep(LETTERS[1:10], each = 30)
+X1           <- round(rnorm(300, mean = 2, sd = 1), 2)
+X2           <- round(rbinom(300, 1, 0.5) + rnorm(300), 2)
+Y            <- round(1 + 2 * X1 + rnorm(300), 2)
+df           <- as.data.frame(cbind(Y, X1, X2, state, year))
+df$Y         <- as.numeric(as.character(df$Y))
+df$X1        <- as.numeric(as.character(df$X1))
+df$X2        <- as.numeric(as.character(df$X2))
+df$year      <- as.numeric(as.character(df$year))
+df$state.num <- rep(1:10, each = 30)
+df$state     <- as.character(df$state)
+df$`T`       <- ifelse(df$state == "A" & df$year >= 15, 1, 0)
+df$Y         <- ifelse(df$state == "A" & df$year >= 15, df$Y + 20, df$Y)
+
+```
+
+The `Synth` package has a `dataprep` function which seems to be the way to prepare the data to get the optimal weights.
+
+```{r}
+library(Synth)
+dataprep.out <-
+    dataprep(
+        df,
+        predictors = c("X1", "X2"),
+        dependent     = "Y",
+        unit.variable = "state.num",
+        time.variable = "year",
+        unit.names.variable = "state",
+        treatment.identifier  = 1,
+        controls.identifier   = c(2:10),
+        time.predictors.prior = c(1:14),
+        time.optimize.ssr     = c(1:14),
+        time.plot             = c(1:30)
+    )
+```
+
+Then use the `synth` function to get the weights. The weights are chosen to minimize the MSPE (mean squared prediction error) in the pre-treatment period.
+
+```{R}
+
+synth.out <- synth(dataprep.out)
+
+```
+
+-   X1 is the control case before the treatment
+
+-   X0 is the control **cases** after the treatment
+
+-   Z1 is the treatment case before the treatment
+
+-   Z0 is the treatment case after the treatment
+
+Notice there are two `v` weights. Those are the weights for each predictor variable.
+
+There are 9 `w` weights. Those are the weights for each state that minimize the MSPE on the pre-treatment period.
+
+```{R}
+path.plot(synth.res    = synth.out,
+          dataprep.res = dataprep.out,
+          Ylab         = c("Y"),
+          Xlab         = c("Year"),
+          Legend       = c("State A","Synthetic State A"),
+          Legend.position = c("topleft")
+)
+
+abline(v   = 15,
+       lty = 2)
+
+
+```
+
+### Other Causual Methods
+
+There are many other types of causal analysis methods. Those include:
+
+1.  Instrumented Variables (IV)
+
+2.  Propensity Score Matching
+
+3.  Interrupted Time Series
+
+### Mixtape
+
+[Here](https://open.spotify.com/playlist/2YJ7CfX8rqTuH9gQvCZ6h4?si=66b385819653499c&pt=1e5d7f3497b9bf90b3b09a9ea97649ef) is the spotify playlist that goes with the [Casual Inference](https://mixtape.scunning.com/index.html) book.
