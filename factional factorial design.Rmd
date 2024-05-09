@@ -51,7 +51,7 @@ We have seen how to reduce the number of required runs (for a similar power) in 
 
 But even using $2^k$ designs there is a sharp increase in required run size for larger numbers of factors.
 
-![](Screenshot 2024-04-30 133416.png)
+![](Screenshot%202024-04-30%20133416.png)
 
 At this point many researchers might bail and call these types of experiments too complex or inappropriate (and we can discuss when that is really the case). But one of the only ways to get at the optimum configuration is going to be to use all of the factors at once.
 
@@ -85,7 +85,7 @@ choose(4,3)
 
 If we assume that the largest, most important effects are most likely to be the main effects, then maybe the two factor interactions and rarely the three factor interactions, why should we waste experimental runs to be able to estimate those effects?
 
-![](Screenshot 2024-04-30 133501.png)
+![](Screenshot%202024-04-30%20133501.png)
 
 We refer to half fractions as $2^{k-1}$ designs.
 
@@ -306,7 +306,7 @@ It possible when the number of factors is larger to break the full factorial int
 
 As you already suspect, as the fractions get smaller, the aliasing pattern gets more complex. With these smaller fractions, you must pay extra attention to it.
 
-![](Screenshot 2024-04-30 133559.png)
+![](Screenshot%202024-04-30%20133559.png)
 
 This code in R will give you the best design in terms of resolution
 
@@ -444,7 +444,7 @@ We know that the variance-covariance matrix of the regression coefficients in a 
 
 In this case we will find design points that maximize the determinant of $(X'X)^{-1}$. Which minimizes the variance of the regression coefficients.
 
-![](Screenshot 2024-04-30 133626.png)
+![](Screenshot%202024-04-30%20133626.png)
 
 The determinant of a square matrix will maximized when all of the off diagonals are 0. But we can also find a combination of -1 and +1 that gets very small off diagonals, getting the determinant as large as possible.
 
