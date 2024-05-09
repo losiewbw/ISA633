@@ -19,27 +19,25 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ## Topics Covered
 
-1. The size of two-level factorial designs (Lawson 6.1)
+1.  The size of two-level factorial designs (Lawson 6.1)
 
-2. Principles of design of screening experiments (Lawson 6.2 and notes).
+2.  Principles of design of screening experiments (Lawson 6.2 and notes).
 
-3. Half-fractions of a full factorial construction (Lawson 6.2 and notes).
+3.  Half-fractions of a full factorial construction (Lawson 6.2 and notes).
 
-4. Analysis of a replicated half-fractions of a full factorial (notes).
+4.  Analysis of a replicated half-fractions of a full factorial (notes).
 
-5. Resolution of a fractional design (notes).
+5.  Resolution of a fractional design (notes).
 
-6. Smaller fractions of a full factorial design (Lawson 6.3).
+6.  Smaller fractions of a full factorial design (Lawson 6.3).
 
-7. Analysis of smaller fractions of a full factorial design (notes).
+7.  Analysis of smaller fractions of a full factorial design (notes).
 
-8. Adding follow up runs to a fractional factorial (notes).
+8.  Adding follow up runs to a fractional factorial (notes).
 
-9. Creating D-optimal follow up runs using R (notes).
+9.  Creating D-optimal follow up runs using R (notes).
 
 10. High level understanding of D-optimally (notes).
-
-
 
 ## Benifits of Factorial Designs
 
@@ -55,47 +53,59 @@ But even using $2^k$ designs there is a sharp increase in required run size for 
 
 ![](Capture.JPG)
 
-At this point many researchers might bail and call these types of experiments too complex or inappropriate (and we can discuss when that is really the case).  But one of the only ways to get at the optimum configuration is going to be to use all of the factors at once. 
+At this point many researchers might bail and call these types of experiments too complex or inappropriate (and we can discuss when that is really the case). But one of the only ways to get at the optimum configuration is going to be to use all of the factors at once.
 
-The solution to the problem of having a large run size and keep the same number of factors is to use just a piece of the full factorial experiment (a fraction).  
+The solution to the problem of having a large run size and keep the same number of factors is to use just a piece of the full factorial experiment (a fraction).
+
+9 main effects , 2 factor interactions, 3f,4f,5f,6f,7f,8f, 9 factor interactions.
+
+if the coefficients are tiny, we can just ignore them in the model.
 
 These fractions are carefully chosen so that orthogonality is maintained between certain factor effects.
 
-There are three key ideas we need to understand to embrace these smaller _screening_ designs.
+There are three key ideas we need to understand to embrace these smaller *screening* designs.
 
-1. __The sparsity of effects principle__. When there are several variables, the system or process is likely to be driven primarily by some of the main effects and low-order interactions.
+1.  **The sparsity of effects principle**. When there are several variables, the system or process is likely to be driven primarily by some of the main effects and low-order interactions.
 
-2. __The projection property__. Fractional factorial designs can be projected into stronger (larger) designs in the subset of significant factors.
+2.  **The projection property**. Fractional factorial designs can be projected into stronger (larger) designs in the subset of significant factors.
 
-3. __Hierarchical ordering principle__ main effects are more likely to be important than two-factor interactions, and two-factor interactions are more likely to be important than three-factor interactions, and so forth. 
+3.  **Hierarchical ordering principle** main effects are more likely to be important than two-factor interactions, and two-factor interactions are more likely to be important than three-factor interactions, and so forth.
 
-
-4. __Sequential experimentation__. It is possible to combine the runs of two (or more) fractional factorials to construct sequentially a larger design to estimate the factor effects and interactions of interest.
-
+4.  **Sequential experimentation**. It is possible to combine the runs of two (or more) fractional factorials to construct sequentially a larger design to estimate the factor effects and interactions of interest. - imp.
 
 ## Half-Fractions
 
-How many effects can be estimated from a $2^4$ design?  List them out.
+How many effects can be estimated from a $2^4$ design? List them out.
 
-*
+-   4 main effects
+
+-   2 factor interactions - 6
+
+-   3 factor interactions - 4
+
+-   4 factor interactions 1
 
 If we assume that the largest, most important effects are most likely to be the main effects, then maybe the two factor interactions and rarely the three factor interactions, why should we waste experimental runs to be able to estimate those effects?
 
 ![](Capture2.jpg)
 
-We refer to half fractions as $2^{k-1}$ designs. 
+We refer to half fractions as $2^{k-1}$ designs.
 
 We construct these designs by hand by doing the following steps:
 
-1. Write down the base design, a full factorial plan in k − 1 factors using the
-coded factor levels (−1) and (+1).
+1.  Write down the base design, a full factorial plan in k − 1 factors using the coded factor levels (−1) and (+1).
 
-2. Add the $k^{th}$ factor to the design by making its coded factor levels equal to
-the product of the other factor levels (i.e., the highest order interaction).
+2.  Add the $k^{th}$ factor to the design by making its coded factor levels equal to the product of the other factor levels (i.e., the highest order interaction).
 
-3. Use these k columns to define the design.
+3.  Use these k columns to define the design.
 
 To create the $2^{4-1}$ design shown above:
+
+for the D column - multiply A,B,C columns to get +1 or -1
+
+thats how we can create the half fraction.
+
+D = the highest order of interaction
 
 ```{R}
 library(FrF2)
@@ -123,15 +133,15 @@ aliases( lm( y~ (.)^3, data = d))
 
 ```
 
-So what if we found A to be active?  
+So what if we found A (main effect) to be active?
 
-*
+-   almost always assume 3 way interactions are negligible.
 
-So what if we found A:B to be active?
+So what if we found A:B (2 factor interaction) to be active?
 
-*
+-   this is more of a problem.
 
-And if we were really unsure of the analysis, we could just go ahead and run the additional 8 treatment combination to "break" the aliasing between the two factor interactions. 
+And if we were really unsure of the analysis, we could just go ahead and run the additional 8 treatment combination to "break" the aliasing between the two factor interactions.
 
 These additional treatment combinations happen to be the mirror image of the first 8 treatment combinations (since they are just the columns with the opposite sign for the highest order interaction).
 
@@ -144,15 +154,15 @@ d2
 
 How would your analysis change if you added the "mirror" combinations onto a design that you have already run?
 
-*
+-   add a block effect
 
-Now most of the literature that you read is going to tell you to run these half-fractions without replication.  With good reason, I mean if you are severely restricted in run size, why would you replicate?
+Now most of the literature that you read is going to tell you to run these half-fractions without replication. With good reason, I mean if you are severely restricted in run size, why would you replicate?
 
-But in the online testing world, or in store testing world, we are not restricted on run size.  __We are restricted on treatment combinations__.  
+But in the online testing world, or in store testing world, we are not restricted on run size. **We are restricted on treatment combinations**.
 
-__The reason you need to learn to use fractional factorial design is to lessen the required number of treatment combinations in an experiment__.  
+**The reason you need to learn to use fractional factorial design is to lessen the required number of treatment combinations in an experiment**.
 
-We will analyze these as replicated designs.  Here is how. 
+We will analyze these as replicated designs. Here is how.
 
 Below is a $2^{4-1}$ design with three replicates and a simulated response.
 
@@ -165,11 +175,9 @@ d$y<-rnorm(24)
 
 ```
 
-We know we have only 8 degrees of freedom for the analysis. I have only 8 columns that are completely uncorrelated. So we can't include the full factorial model.  What should I include?
+We know we have only 8 degrees of freedom for the analysis. I have only 8 columns that are completely uncorrelated. So we can't include the full factorial model. What should I include?
 
-*
-
-
+-   go back and look at the alias pattern
 
 ```{r}
 reg<-lm(y~A+B+C+D+A:B+A:C+A:D, data=d)
@@ -184,54 +192,53 @@ summary(reg)
 
 ```
 
-
 ```{r, echo=FALSE}
-df<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\two level factorial design\\marketing experiment.csv")
+df<-read.csv("marketing experiment.csv")
 df$ABCD<-df$A*df$B*df$C*df$D
 df.half<-df[which(df$ABCD==1),]
-write.csv(df.half[,-6], "I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\fractional factorial design\\marketing experiment half.csv", row.names = FALSE)
+write.csv(df.half[,-6], "marketing experiment half.csv", row.names = FALSE)
 df.half2<-df[which(df$ABCD==-1),]
-write.csv(df.half2[,-6], "I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\fractional factorial design\\marketing experiment half 2.csv", row.names = FALSE)
+write.csv(df.half2[,-6], "marketing experiment half 2.csv", row.names = FALSE)
 ```
+
+-   B:C is NA meaning, no df available to estimate that effect.
 
 ## Example
 
-Let's revisit the marketing experiment which was originally a $2^{4}$ experiment.  The file "marketing experiment half.csv" contains a half fraction $2^{4-1}$ of the original data. Recall the response is a count of folks who responded to the offer out of 7500 mailings.
+Let's revisit the marketing experiment which was originally a $2^{4}$ experiment. The file "marketing experiment half.csv" contains a half fraction $2^{4-1}$ of the original data. Recall the response is a count of folks who responded to the offer out of 7500 mailings.
 
 Analyze this experiment.
 
 ```{r}
-df<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\fractional factorial design\\marketing experiment half.csv")
+df<-read.csv("marketing experiment half.csv")
 df$mail<-rep(7500, nrow(df))
 reg<-glm(cbind(Y, mail-Y) ~ A+B + C + D+A:B+A:C+A:D, data = df, family = binomial )
 summary(reg)
 
 ```
 
-Here is a nice visualization of the two way interactions.  This is in the `FrF2` package.
-
+Here is a nice visualization of the two way interactions. This is in the `FrF2` package.
 
 Ahh...so with fewer treatment combinations (less replication because there is less hidden replication) we do not pick up any interaction effects.
 
-How do you resolve this?  
+How do you resolve this?
 
-*
+-   if you suspect 2 FI are important you would have to add runs to your experiment.
 
-Let's assume we suspect that there are interactions and we decide to run the next 8 runs of the experiment.  Those runs are contained in the "marketing experiment half 2.csv".  
+Let's assume we suspect that there are interactions and we decide to run the next 8 runs of the experiment. Those runs are contained in the "marketing experiment half 2.csv".
 
-In this analysis we must now add a block effect since we probably ran the second set of treatment combinations at a different time than the first. 
-
+In this analysis we must now add a block effect since we probably ran the second set of treatment combinations at a different time than the first.
 
 ```{r}
-df2<-read.csv("I:\\Classes\\ISA 633\\6. Factorial and Fractional Factorial Designs\\fractional factorial design\\marketing experiment half 2.csv")
+df2<-read.csv("marketing experiment half 2.csv")
 df2$mail<-rep(7500, nrow(df2))
 df.all<-rbind(df, df2)
 df.all$block<-as.factor(c(rep(1,8), rep(2, 8)))
 ```
 
-The block effect is going to suck up a degree of freedom.  It will be confounded with our 4 way interaction.  
+The block effect is going to suck up a degree of freedom. It will be confounded with our 4 way interaction.
 
-The saturated model will include up to three way interactions with the block effect.
+The saturated model (all possible effects) will include up to three way interactions with the block effect.
 
 ```{r}
 
@@ -250,8 +257,6 @@ summary(reg)
 ## Power Simulation
 
 Perhaps the easiest way to compare these two different approaches (full factorial vs. half fraction) is through simulation.
-
-
 
 ```{R}
 sigma=3
@@ -282,7 +287,6 @@ colSums(p)
 
 Half fraction
 
-
 ```{r}
 
 power<-c()
@@ -306,14 +310,11 @@ colSums(p)
 
 ## Higher Fractionation
 
-It possible when the number of factors is larger to break the full factorial into quarter fractions.  We call these $2^{k-2}$ designs.
+It possible when the number of factors is larger to break the full factorial into quarter fractions. We call these $2^{k-2}$ designs.
 
-As you already suspect, as the fractions get smaller, the aliasing pattern gets more complex.  With these smaller fractions, you must pay extra attention to it.
+As you already suspect, as the fractions get smaller, the aliasing pattern gets more complex. With these smaller fractions, you must pay extra attention to it.
 
-
-
-![](Capture3.jpg)
-This code in R will give you the design above.
+![](Capture3.jpg) This code in R will give you the design above.
 
 ```{r}
 
@@ -322,15 +323,17 @@ d
 
 ```
 
-We want to make sure that if we are using these small _screening_ designs that we choose the option that has the main effects confounded with three factor interactions or higher.  
+We want to make sure that if we are using these small *screening* designs that we choose the option that has the main effects confounded with three factor interactions or higher.
 
-Those are what we call resolution IV designs. 
+Those are what we call resolution IV designs.
 
 If we choose a quarter fraction that has main effects aliased with two factor interactions that is called a resolution III design. These are risky since we are more likely to have two factor interactions be important.
 
-You need to check the alias pattern carefully.  This is the pattern of the design above.  Which is a resolution III design.  
+You need to check the alias pattern carefully. This is the pattern of the design above. Which is a resolution III design.
 
-For this set up, resolution III is the best we can do.
+For this set up, resolution III is the best we can do. Resolution : the length of the shortest "word" . Main effects = 2 factor interactions (the 1st one)
+
+-   res 3 is risky, chances are you will have to do a follow up.
 
 ```{r}
 
@@ -338,30 +341,33 @@ d$y<-rnorm(8)
 aliases( lm( y~ (.)^2, data = d))
 ```
 
-But let's not forget that when people use these designs they often have a sequential experimentation strategy.  
+But let's not forget that when people use these designs they often have a sequential experimentation strategy.
 
-When generating fractions with the `FrF2` package, if you do not specify generators in the design creation, it will output what is called "minimum aberration" design.  Which is the design with the best resolution (highest) for the run size and number of factors.
+When generating fractions with the `FrF2` package, if you do not specify generators in the design creation, it will output what is called "minimum aberration" design. Which is the design with the best resolution (highest) for the run size and number of factors.
 
-Assume now we have 8 factors we wish to include in our experiment.  We will use each factor at two levels.
+Assume now we have 8 factors we wish to include in our experiment. We will use each factor at two levels.
 
 How many unique experimental runs would a full factorial require?
 
-*
+-   2\^8 = 256 , not a feasible design
 
 How many unique experimental runs would a half-fraction of a full factorial require?
 
-*
+-   2\^(8-1) = 128 , still alot
 
 How many unique experimental runs would a quarter-fraction of a full factorial require?
 
-*
+-   2\^(8-2) = 64
 
 How many unique experiment runs would an eighth fraction of a full factorial require?
 
-*
-
+-   2\^(8-3) = 32
 
 What resolution is this design?
+
+Res 4 is pretty good.
+
+FrF2 package automatically gives the highest resolution possible.
 
 ```{r}
 d<-FrF2(32, 8)
@@ -369,7 +375,7 @@ d$y<-rnorm(32)
 aliases( lm( y~ (.)^3, data = d))
 ```
 
-Can we go smaller?  How about a 1/16 fraction?  What resolution is this design?
+Can we go smaller? How about a 1/16 fraction? What resolution is this design? 2\^(8-4) = 16, res 4.
 
 ```{r}
 d<-FrF2(16, 8, randomze=FALSE)
@@ -378,7 +384,7 @@ aliases( lm( y~ (.)^3, data = d))
 
 ```
 
-Let's live on the edge.  We decide to use the $2^{8-4}$ fraction.  And for ease let's just use 3 replicates (the analysis would not change if you have more replicates).
+Let's live on the edge. We decide to use the $2^{8-4}$ fraction. And for ease let's just use 3 replicates (the analysis would not change if you have more replicates).
 
 ```{r}
 d<-rbind(d,d,d)
@@ -404,7 +410,7 @@ summary(reg)
 
 ```
 
-And here is a nice way to visualize all of the two factor interactions.  `IAplot` is in the `FrF2` package.  It will only work for `lm()` models.
+And here is a nice way to visualize all of the two factor interactions. `IAplot` is in the `FrF2` package. It will only work for `lm()` models.
 
 ```{r}
 
@@ -412,15 +418,13 @@ IAPlot(reg)
 
 ```
 
-
-What to do?
+What to do? Add runs to the experiment.
 
 We need to follow up.
 
 ## D-optimal follow up
 
-
-So I can use the mirror, but that is an additional 16 runs. 
+So I can use the mirror, but that is an additional 16 runs.
 
 It is possible, once I know the model that I wish to fit that I can find a set of points, potentially less than the mirror that will break that alias chain.
 
@@ -428,26 +432,27 @@ In this case, I wish to be able to fit a model with both the AB and the CE inter
 
 ### D-optimal Follow-up
 
-We will generate these follow-up runs optimally.  Meaning we will specify a criterion to optimize and the actual +1 and -1 will be chosen such that they optimize the criterion.
+We will generate these follow-up runs optimally. Meaning we will specify a criterion to optimize and the actual +1 and -1 will be chosen such that they optimize the criterion.
 
 Since we know we are fitting a linear model to analyze these designs and we can choose the structure of our design, we have an advantage.
 
 Recall $X$ is the model matrix.
 
-We know that the variance-covariance matrix of the regression coefficients in a linear model is $\sigma^2(X'X)^{-1}$.  We can't control $\sigma^2$.  But we can control properties of $(X'X)^{-1}$.  
+We know that the variance-covariance matrix of the regression coefficients in a linear model is $\sigma^2(X'X)^{-1}$. We can't control $\sigma^2$ (experimental error). But we can control properties of $(X'X)^{-1}$.
 
-In this case we will find design points that maximize the determinant of $(X'X)^{-1}$.  Which minimizes the variance of the regression coefficients. 
+In this case we will find design points that maximize the determinant of $(X'X)^{-1}$. Which minimizes the variance of the regression coefficients. $(X'X)^{-1}$ is our model matrix.
+
+The ideal structure for a least squares design is to have an D data frame that has no correlation between the columns. The goal is to make the correlation as small as possible.
 
 ![](Capture4.JPG)
 
+The determinant of a square matrix will maximized when all of the off diagonals are 0. But we can also find a combination of -1 and +1 that gets very small off diagonals, getting the determinant as large as possible.
 
-The determinant of a square matrix will maximized when all of the off diagonals are 0.  But we can also find a combination of -1 and +1 that gets very small off diagonals, getting the determinant as large as possible. 
-
-Designs that are constructed by finding combinations of +1 and -1 that maximize the determinant are called D-optimal designs. 
+Designs that are constructed by finding combinations of +1 and -1 that maximize the determinant are called D-optimal designs.
 
 In general, optimal designs are very flexible in terms of $n$ and $k$. So they are ideal for follow up designs or other screening designs.
 
-The down side of D-optimal designs is that you have to specify the model in advance, because you have to create the $X$ matrix.  
+**The down side of D-optimal designs is that you have to specify the model in advance, because you have to create the** $X$ **matrix.**
 
 But when we have use them in a follow up experiment, this is in consequential because you already know the model you want to fit.
 
@@ -463,7 +468,6 @@ cand <- data.frame( A=cand$A, B=cand$B, C=cand$C, D=cand$D, E=cand$E, F=cand$F, 
 ```
 
 Then we create the our original design and add a block.
-
 
 ```{r}
 d<-FrF2(16, 8, randomize = FALSE)
@@ -482,8 +486,7 @@ optim <- optFederov( ~ A + B + C+ E + I(A*B) + I(C*E), data = all, nTrials = 24,
 optim
 ```
 
-
-The trade off is now there is a bit of correlation between the columns.  But a bit of correlation is ok.
+The trade off is now there is a bit of correlation between the columns. But a bit of correlation is ok.
 
 ```{r}
 
@@ -493,6 +496,7 @@ library(corrplot)
 corrplot(M)
 
 ```
+
 Here is the correlation between the effects in the model that we specified.
 
 ```{r}
@@ -500,6 +504,7 @@ X<-X[,c(1:3, 5,9, 23 )]
 M<-cor(X)
 corrplot(M)
 ```
+
 Can we do the same thing with just 6 additional experimental runs?
 
 ```{r}
@@ -518,7 +523,6 @@ corrplot(M)
 
 ```
 
-
 ```{r}
 X<-model.matrix(~0+.^2, optim$design[,-9])
 X<-X[,c(1:3, 5,9, 23 )]
@@ -528,10 +532,9 @@ corrplot(M)
 
 ```
 
-Risky.  But a correlation of 0.47 is not a correlation of 1. So using this augmented design. 
+Risky. But a correlation of 0.47 is not a correlation of 1. So using this augmented design.
 
-What we would do now is gather data on three replicates of the augmented design.  In this case replicate these rows three times.
-
+What we would do now is gather data on three replicates of the augmented design. In this case replicate these rows three times.
 
 ```{r}
 d2<-optim$design[c(17:20),]
@@ -565,7 +568,7 @@ summary(reg)
 
 What is your conclusion?
 
-*
+-   
 
 ## Python Code
 

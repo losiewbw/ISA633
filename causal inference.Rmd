@@ -374,7 +374,7 @@ abline(v   = 15,
 
 ```
 
-### Other Causual Methods
+### Other Causal Methods
 
 There are many other types of causal analysis methods. Those include:
 
