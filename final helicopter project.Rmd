@@ -49,6 +49,11 @@ shuffled_experiments <- d[sample(nrow(d)), ]
 shuffled_experiments
 ```
 
+```{r}
+write.csv(shuffled_experiments, 'helicopter_experiment.csv')
+```
+
+
 ## Experiment
 
 
