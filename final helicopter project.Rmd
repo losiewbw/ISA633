@@ -8,52 +8,116 @@ date: "2024-05-09"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Project Introduction 
-
-
-
 ## Experimental Design 
 
 The five variables we chose to experiment with are wing length, body length, body width, drop style, and whether or not we drop with a paperclip. The levels of these factors are as follows
 
 * A = wing_length: [4,5]
 * B = body_length: [5,6]
-* C = body_width: [3.5,5]
+* C = body_width: [1.2,1.7]
 * D = drop_style: [pinched wings, open]
 * E = paper_clip: [paper clip, no paper clip]
 
 
 Our experiment is a half factorial design created using the code below. The design is created with 16 helicopters and replicated once for 32 helicopters. The -1 refers to the first level of each factor and the 1 refers to the second level of the factor. 
 
-
 ```{r}
 library(FrF2)
 d<-FrF2(16, 5, randomize=FALSE)
 d$y<-rnorm(16)
-aliases( lm( y~ (.)^4, data = d))
+aliases( lm( y~ (.)^5, data = d))
 ```
-The aliases show that we have a resolution IV design, which is ideal for this experiment
+The aliases show that we have a resolution IV design, which is ideal for this experiment as we can run a model with only two level interactions and account for the higher level interactions. We will fit our model with the terms on the left side to also explain the interactions on the right side.
 
+The code below takes our factor levels and replicates them so we have 32 rows to represent our 32 helicopters.
 
 ```{r}
-d<-FrF2(16, 5, randomize=FALSE)
 d<-as.data.frame(d)
 d<-rbind(d, d)
 d
 ```
 ## Randomizing Run Order
 
+Once we have our 32 helicopters we need to randomize the drop order, which we do below
+
 ```{r}
 set.seed(633)  # Setting seed for reproducibility
 shuffled_experiments <- d[sample(nrow(d)), ]
 shuffled_experiments
 ```
+We then can write our random drop order into a csv to create our file we will track our drop times on
 
 ```{r}
-write.csv(shuffled_experiments, 'helicopter_experiment.csv')
+#write.csv(shuffled_experiments, 'helicopter_experiment.csv')
 ```
 
 
 ## Experiment
 
+```{r}
+df <- read.csv('helicopter_experiment_results.csv')
+head(df)
+```
+We will first fit a model with all five factors and their two level interactions to represent the left side of the aliases as mentioned above
 
+```{r}
+reg<-lm(Drop.Time ~ A + B + C + D + E + A:B + A:C + A:D + A:E + B:C + B:D + B:E + C:D + C:E + D:E, data = df)
+summary(reg)
+```
+To reduce the model we dropped the most insignificant interaction as a time. None of the interactions ended up being significant so we are left with this model. We kept all main effects in the model so we could best estimate how to make our optimal helicopter.
+
+```{r}
+reg<-lm(Drop.Time ~ A + B + C + D + E, data = df)
+summary(reg)
+```
+## Assumptions
+
+Using the plots below, we can check the assumptions of our linear regression model. Our residual plots look pretty good, with the only small issue being the tail of the QQ plot not falling on the line as much as we would like. However, our model passes the assumptions enough to continue with our analysis
+
+```{r}
+par(mfrow = c(2, 2))
+plot(reg)
+```
+
+## Optimal Helicopter
+
+From our model we can see that both A and C are significant. We can plot those below to determine which level is most significant
+
+```{r}
+library(sjPlot)
+plot_model(reg, type="eff", terms=c("A"), axis.title = ("Drop Time"), title="" )
+```
+```{r}
+plot_model(reg, type="eff", terms=c("C"), axis.title = ("Drop Time"), title="" )
+```
+From those two plots we can see that having a wing length of 5 and a body width of 1.2 are significant. When it comes to determining the optimal helicopter, we have to decide between two levels for the other three factors. While the other three variables are not significant, we can still plot them to pick the levels that reported slightly longer drop times.
+
+```{r}
+plot_model(reg, type="eff", terms=c("B"), axis.title = ("Drop Time"), title="" )
+```
+```{r}
+plot_model(reg, type="eff", terms=c("D"), axis.title = ("Drop Time"), title="" )
+```
+```{r}
+plot_model(reg, type="eff", terms=c("E"), axis.title = ("Drop Time"), title="" )
+```
+This leaves us with an optimal helicopter of:
+
+* wing length = 5 (1)
+* body length = 5 (-1)
+* body width = 1.2 (-1)
+* drop style = pinched wings (-1)
+* paper clip = yes (-1)
+
+## Prediction using Optimal Helicopter
+
+We can create a new dataset that only stores our optimial helicopter values.
+
+```{r}
+new = data.frame(A = 1, B = -1, C = -1, D = -1, E = -1)
+estimate = predict(reg, newdata = new, interval = 'prediction')
+print(estimate)
+```
+Using this new data set that sets A to 1, B to -1, C to -1, D to -1, and E to -1 we can predict that the drop time for our optimal helicopter will be between 5.94 seconds and 8.75 seconds, with a predicted value of 7.34 seconds.
+
+We constructed our optimal helicopter and recorded its drop time to be 7.83 seconds. This time was around .5 seconds over our predicted value. However, it still fell within our confidence interval.
